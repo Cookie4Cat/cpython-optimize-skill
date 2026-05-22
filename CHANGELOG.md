@@ -2,6 +2,12 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.5.2
+
+- 性能测试基线版本统一为 Python 3.14.3
+- 更新 `cpython-baseline` Dockerfile 中 `PYTHON_VERSION`
+- 同步详细设计模板（用户修订）
+
 ## v0.5.1
 
 - 新增 `.claude-plugin/marketplace.json` 支持插件市场安装
