@@ -13,6 +13,36 @@ description: 在需要创建/管理 Docker 容器、挂载目录、镜像复用�
 - 宿主机目录必须先隔离好
 - 容器隔离建立在宿主机目录隔离之上
 
+## 镜像构建规则
+
+**禁止从外部拉取预构建镜像。** 必须使用本技能内置的 Dockerfile 从源码构建：
+
+```bash
+# 正确：用内置 Dockerfile 构建
+docker compose up -d --build
+
+# 错误：不要拉取外部镜像
+docker pull xxx
+```
+
+内置模板：
+- `templates/cpython-baseline/Dockerfile` — 基于openEuler 24.03 + GCC 14 + Python 3.14.3
+- `templates/cpython-baseline/docker-compose.yml` — 基线线编排
+- `templates/cinderx-test/docker-compose.yml` — 调试线编排（共享基线线 Dockerfile）
+
+`cinderx-test` 的 `docker-compose.yml` 已配置 `build.context` 指向 `../cpython-baseline`，两条线共用同一个镜像。首次构建后镜像会被本地缓存，后续启动直接复用。
+
+如果镜像已存在且不需要重建，直接 `docker compose up -d` 即可。
+
+## 双线结构
+
+| 线路 | 模板 | 用途 | 优先级 |
+|------|------|------|--------|
+| `cinderx-test` | `templates/cinderx-test/` | 功能验证、HIR dump、crash 复现 | 先走 |
+| `cpython-baseline` | `templates/cpython-baseline/` | stock CPython vs CinderX 正式对照 | 后走 |
+
+先走 `cinderx-test` 完成功能确认，再走 `cpython-baseline` 做正式对照。
+
 ## 推荐做法
 
 - 宿主机提供：Docker、`docker compose`、`rsync`
@@ -31,35 +61,16 @@ description: 在需要创建/管理 Docker 容器、挂载目录、镜像复用�
 - bind mount 前先确认挂载源目录是当前 Agent 自己的目录
 - 结果目录、源码目录、pyperformance 目录都应避免与他人共享写入
 
-## 双线结构
+## 脚本入口
 
-Docker 工作流明确分成两条线：
-
-1. **基线线：`cpython-baseline`**
-   - 用于 stock CPython JIT 和 CinderX 的正式对照
-   - 侧重性能对比、公平性和统一入口
-
-2. **调试线：`cinderx-test`**
-   - 用于 CinderX 功能验证、HIR dump、native crash 复现
-   - 侧重 correctness 和定位效率
-
-模板入口：
-- `templates/cpython-baseline/`
-- `templates/cinderx-test/`
-
-脚本入口：
-- `scripts/setup.sh` — 容器初始化
-- `scripts/smoke.sh` — 冒烟测试
+- `scripts/setup.sh` — 容器内安装 CinderX 和 pyperformance
+- `scripts/smoke.sh` — JIT 功能冒烟测试
 
 ## 优先级
 
 1. Kunpeng Docker：兼容性主验证环境
 2. Kunpeng 宿主机：最终少量关键复核
 3. 本地 Docker：开发期快速回归
-
-在 Kunpeng Docker 内再分：
-- 先走 `cinderx-test` 完成功能/调试验证
-- 再走 `cpython-baseline` 做正式对照
 
 ## 实战注意事项
 
@@ -84,3 +95,42 @@ export PIP_INDEX_URL=https://repo.huaweicloud.com/repository/pypi/simple
 在容器脚本里应确保：
 - `python -m pip install ...` 能继承 `PIP_INDEX_URL`
 - 隔离构建环境也能继承 `PIP_INDEX_URL`
+
+## 网络诊断
+
+当构建或安装过程中出现网络缓慢时，执行以下检查，**但不要自行修复**，必须将诊断结果反馈给用户并等待确认后再操作。
+
+### 检查步骤
+
+1. **测试代理连通性**
+   ```bash
+   curl -x http://host.docker.internal:7890 -o /dev/null -w "%{http_code} %{time_total}s" https://pypi.org/
+   ```
+
+2. **测试直连（绕过代理）**
+   ```bash
+   curl --noproxy '*' -o /dev/null -w "%{http_code} %{time_total}s" https://pypi.org/
+   ```
+
+3. **测试国内镜像**
+   ```bash
+   curl --noproxy '*' -o /dev/null -w "%{http_code} %{time_total}s" https://mirrors.aliyun.com/pypi/simple/
+   ```
+
+4. **检查 DNS 解析**
+   ```bash
+   time nslookup pypi.org
+   time nslookup mirrors.aliyun.com
+   ```
+
+### 诊断结果模板
+
+向用户报告时包含：
+
+- 代理是否可达（是/否/超时）
+- 直连速率
+- 国内镜像速率
+- DNS 解析耗时
+- 建议方案（如：切换镜像源、关闭代理、修改 DNS 等）
+
+**必须等用户确认后才执行任何修改操作。**

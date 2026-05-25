@@ -2,6 +2,15 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.6.0
+
+- docker-runtime 技能增加镜像构建规则和网络诊断指引
+- 模板目录统一为单一 README（消除冗余的 project-readme.md）
+- 基础镜像升级为 openEuler 24.03 LTS SP3
+- 新增 Codex CLI 插件市场支持（`.agents/plugins/marketplace.json`）
+- README 安装说明区分 Claude Code 和 Codex CLI
+- 结构验证测试覆盖 `.agents/plugins/` 目录
+
 ## v0.5.2
 
 - 性能测试基线版本统一为 Python 3.14.3

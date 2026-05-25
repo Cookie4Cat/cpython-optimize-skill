@@ -1,0 +1,16 @@
+{
+    "name": "cpython-optimize-skill",
+    "interface": {
+        "displayName": "CPython Optimize"
+    },
+    "plugins": [
+        {
+            "name": "cpython-optimize-skill",
+            "source": {
+                "source": "local",
+                "path": "./"
+            },
+            "category": "workflow"
+        }
+    ]
+}

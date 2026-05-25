@@ -1,10 +1,10 @@
 # CinderX Performance Testing Environment
 # Target real-env approximation:
-# - openEuler 24.03 LTS SP1
+# - openEuler 24.03 LTS SP3
 # - GCC 14.2.x
 # - CPython 3.14 built inside the image
 
-FROM openeuler/openeuler:24.03-lts-sp1
+FROM openeuler/openeuler:24.03-lts-sp3
 
 ARG PYTHON_VERSION=3.14.3
 

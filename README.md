@@ -30,9 +30,12 @@
 
 安装后，新会话启动时 `using-cpython-optimize` 引导技能会通过 SessionStart hook 自动注入上下文。
 
-### Codex
+### Codex CLI
 
-将仓库放入 `~/.codex/skills/` 或通过 Codex 插件机制安装。
+```bash
+codex plugin marketplace add https://github.com/sisibeloved/cpython-optimize-skill
+codex plugin add cpython-optimize-skill
+```
 
 ---
 
@@ -57,6 +60,9 @@ Agent 会根据任务自动选择对应技能，无需手动加载。
 │   ├── marketplace.json         # 插件市场元数据
 │   └── plugin.json              # 插件描述
 ├── .codex-plugin/               # Codex 插件注册
+│   └── plugin.json
+├── .agents/plugins/             # Codex 插件市场元数据
+│   └── marketplace.json
 ├── hooks/                       # SessionStart 自动注入
 │   ├── hooks.json
 │   └── session-start
