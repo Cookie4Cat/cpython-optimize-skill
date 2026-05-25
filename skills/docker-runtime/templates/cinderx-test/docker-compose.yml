@@ -2,7 +2,7 @@ services:
   cinderx-arm64:
     image: ${BASE_IMAGE:-cinderx-pyperf-realenv:arm64}
     build:
-      context: ../cpython-baseline
+      context: ${DOCKERFILE_CONTEXT:-../cpython-baseline}
       dockerfile: Dockerfile
     platform: linux/arm64
     hostname: cinderx-arm64
@@ -12,17 +12,17 @@ services:
     # Mounts
     volumes:
       # CinderX source tree
-      - ../../:/cinderx
+      - ${CINDERX_ROOT:?CINDERX_ROOT is required}:/cinderx
       # Wheel files (from cinderx/dist directory)
-      - ../../dist:/dist:ro
+      - ${CINDERX_DIST:-${CINDERX_ROOT}/dist}:/dist:ro
       # Test scripts
-      - ./scripts:/scripts:ro
+      - ${SCRIPTS_DIR:-./scripts}:/scripts:ro
       # Benchmark configs
-      - ./configs:/configs:ro
+      - ${CONFIGS_DIR:-./configs}:/configs:ro
       # Pyperformance source tree
-      - ${PYPERFORMANCE_ROOT:-${HOME}/Repo/pyperformance}:/pyperformance:ro
+      - ${PYPERFORMANCE_ROOT:?PYPERFORMANCE_ROOT is required}:/pyperformance:ro
       # Worker startup hook for CinderX JIT
-      - ../../scripts/arm/pyperf_env_hook:/pyperf_env_hook:ro
+      - ${PYPERF_HOOK_ROOT:-${CINDERX_ROOT}/scripts/arm/pyperf_env_hook}:/pyperf_env_hook:ro
       # Benchmark results
       - ${RESULTS_DIR:-./results}:/results
       # Cache for pyperformance

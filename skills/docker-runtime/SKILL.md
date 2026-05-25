@@ -30,9 +30,34 @@ docker pull xxx
 - `templates/cpython-baseline/docker-compose.yml` — 基线线编排
 - `templates/cinderx-test/docker-compose.yml` — 调试线编排（共享基线线 Dockerfile）
 
-`cinderx-test` 的 `docker-compose.yml` 已配置 `build.context` 指向 `../cpython-baseline`，两条线共用同一个镜像。首次构建后镜像会被本地缓存，后续启动直接复用。
+`cinderx-test` 的 `docker-compose.yml` 通过 `DOCKERFILE_CONTEXT` 环境变量指定 Dockerfile 所在目录，两条线共用同一个镜像。首次构建后镜像会被本地缓存，后续启动直接复用。
 
 如果镜像已存在且不需要重建，直接 `docker compose up -d` 即可。
+
+## 环境变量
+
+启动容器前必须设置以下环境变量（必填项缺失时 docker compose 会报错）：
+
+| 变量 | 必填 | 说明 |
+|------|------|------|
+| `CINDERX_ROOT` | 是 | CinderX 源码根目录 |
+| `CPYTHON_ROOT` | baseline 必填 | stock CPython 源码目录 |
+| `PYPERFORMANCE_ROOT` | 是 | pyperformance 源码目录 |
+| `DOCKERFILE_CONTEXT` | 否 | Dockerfile 所在目录，默认 `../cpython-baseline` |
+| `CINDERX_DIST` | 否 | CinderX wheel 目录，默认 `${CINDERX_ROOT}/dist` |
+| `PYPERF_HOOK_ROOT` | 否 | pyperf env hook 目录，默认 `${CINDERX_ROOT}/scripts/arm/pyperf_env_hook` |
+| `SCRIPTS_DIR` | 否 | 容器内脚本目录，默认 `./scripts` |
+| `CONFIGS_DIR` | 否 | benchmark 配置目录，默认 `./configs` |
+| `RESULTS_DIR` | 否 | 结果输出目录，默认 `./results` |
+
+使用示例：
+
+```bash
+export CINDERX_ROOT=/home/user/cinderx
+export CPYTHON_ROOT=/home/user/Repo/cpython
+export PYPERFORMANCE_ROOT=/home/user/Repo/pyperformance
+docker compose up -d --build
+```
 
 ## 双线结构
 

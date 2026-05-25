@@ -2,6 +2,11 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.6.1
+
+- docker-compose 模板所有路径改为环境变量，消除相对路径依赖
+- 区分用户侧必填变量（CINDERX_ROOT、CPYTHON_ROOT、PYPERFORMANCE_ROOT）和 skill 侧可选变量
+
 ## v0.6.0
 
 - docker-runtime 技能增加镜像构建规则和网络诊断指引

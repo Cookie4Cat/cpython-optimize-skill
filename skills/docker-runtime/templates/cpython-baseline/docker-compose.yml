@@ -9,21 +9,21 @@ services:
 
     volumes:
       # Stock CPython source tree for JIT-enabled baseline build
-      - ${CPYTHON_ROOT:-${HOME}/Repo/cpython}:/cpython:ro
+      - ${CPYTHON_ROOT:?CPYTHON_ROOT is required}:/cpython:ro
       # CinderX source tree
-      - ../../:/cinderx
+      - ${CINDERX_ROOT:?CINDERX_ROOT is required}:/cinderx
       # CinderX wheel files
-      - ../../dist:/dist:ro
+      - ${CINDERX_DIST:-${CINDERX_ROOT}/dist}:/dist:ro
       # Pyperformance source tree
-      - ${PYPERFORMANCE_ROOT:-${HOME}/Repo/pyperformance}:/pyperformance:ro
+      - ${PYPERFORMANCE_ROOT:?PYPERFORMANCE_ROOT is required}:/pyperformance:ro
       # Worker startup hook for CinderX JIT
-      - ../../scripts/arm/pyperf_env_hook:/pyperf_env_hook:ro
+      - ${PYPERF_HOOK_ROOT:-${CINDERX_ROOT}/scripts/arm/pyperf_env_hook}:/pyperf_env_hook:ro
       # Benchmark scripts
-      - ./scripts:/scripts:ro
+      - ${SCRIPTS_DIR:-./scripts}:/scripts:ro
       # Results
       - ${RESULTS_DIR:-./results}:/results
       # Experiment configs
-      - ./configs:/configs:ro
+      - ${CONFIGS_DIR:-./configs}:/configs:ro
       # Shared CinderX wheel cache
       - cinderx-wheel-cache:/opt/cinderx-wheel-cache
 
