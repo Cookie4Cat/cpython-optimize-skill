@@ -19,13 +19,19 @@ def require(text: str, needle: str, context: str) -> None:
 
 
 def main() -> int:
-    pyperf = read(ROOT / "docs" / "workflows" / "pyperformance-test.md")
-    docker = read(ROOT / "docs" / "workflows" / "docker-runtime.md")
-    docs = read(ROOT / "docs" / "workflows" / "documentation.md")
-    case = read(ROOT / "docs" / "workflows" / "case-analysis.md")
-    triage = read(ROOT / "docs" / "playbooks" / "pyperformance-crash-triage.md")
-    decision = read(ROOT / "docs" / "playbooks" / "entry-decision-table.md")
-    faq = read(ROOT / "docs" / "playbooks" / "faq.md")
+    pyperf = read(ROOT / "skills" / "pyperformance-test" / "SKILL.md")
+    docker = read(ROOT / "skills" / "docker-runtime" / "SKILL.md")
+    docs = read(ROOT / "skills" / "experiment-documentation" / "SKILL.md")
+    case = read(ROOT / "skills" / "cinderx-analysis" / "SKILL.md")
+    triage = read(
+        ROOT
+        / "skills"
+        / "pyperformance-test"
+        / "references"
+        / "pyperformance-crash-triage.md"
+    )
+    entry = read(ROOT / "skills" / "using-cpython-optimize" / "SKILL.md")
+    remote = read(ROOT / "skills" / "remote-environment" / "SKILL.md")
     scenarios = read(ROOT / "tests" / "pressure-scenarios.md")
 
     require(scenarios, "场景 1", "pressure scenarios")
@@ -62,7 +68,7 @@ def main() -> int:
         "bind mount",
         "PIP_INDEX_URL",
     ]:
-        require(docker, needle, "docker workflow")
+        require(docker, needle, "docker skill")
 
     for needle in [
         "run_benchmark.py",
@@ -70,29 +76,23 @@ def main() -> int:
         "cpython-baseline",
         "cinderx-test",
         "HIR dump",
-        "长连接交互 shell",
-        "docker exec",
-        "独立宿主机目录",
-        "rsync",
+        "只看功能",
+        "正式对照",
+        "宿主机独立目录",
         "性能口径",
         "baseline",
     ]:
-        require(decision, needle, "entry decision table")
+        require(entry, needle, "entry skill")
 
     for needle in [
-        "功能，不看性能",
-        "run_benchmark.py --worker",
-        "driver / manager / worker",
-        "Kunpeng 宿主机",
-        "docker exec",
+        "SSH",
+        "tmux",
         "裸机",
-        "项目隔离性",
+        "独立宿主机目录",
         "rsync",
-        "真实命令",
-        "性能口径",
-        "baseline",
+        "Docker",
     ]:
-        require(faq, needle, "faq")
+        require(remote, needle, "remote skill")
 
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
     for needle in [
@@ -130,7 +130,7 @@ def main() -> int:
         "compile storm",
         "SIGSEGV",
     ]:
-        require(triage, needle, "crash triage playbook")
+        require(triage, needle, "crash triage reference")
 
     print("pressure scenario validation passed")
     return 0

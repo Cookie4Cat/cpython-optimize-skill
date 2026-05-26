@@ -14,7 +14,6 @@ SKILLS_DIR = ROOT / "skills"
 TOP_LEVEL_LAYOUT = {
     ".claude-plugin": "dir",
     ".codex-plugin": "dir",
-    ".agents": "dir",
     "hooks": "dir",
     "skills": "dir",
     "tests": "dir",
@@ -99,11 +98,6 @@ def main() -> int:
     # 3. plugin.json 字段
     validate_plugin_json(ROOT / ".claude-plugin" / "plugin.json")
     validate_plugin_json(ROOT / ".codex-plugin" / "plugin.json")
-
-    # 3b. Codex marketplace
-    codex_marketplace = ROOT / ".agents" / "plugins" / "marketplace.json"
-    if not codex_marketplace.is_file():
-        raise AssertionError(f"缺少文件: {codex_marketplace.relative_to(ROOT)}")
 
     # 4. skills/ 下每个子目录都是合法技能
     if not SKILLS_DIR.is_dir():
