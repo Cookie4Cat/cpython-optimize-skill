@@ -8,7 +8,7 @@
             "name": "cpython-optimize-skill",
             "source": {
                 "source": "local",
-                "path": "./"
+                "path": "./plugins/cpython-optimize-skill"
             },
             "category": "workflow"
         }

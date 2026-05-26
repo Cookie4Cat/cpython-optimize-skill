@@ -2,6 +2,12 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.7.0
+
+- 仓库改为 marketplace 结构：插件内容移至 `plugins/cpython-optimize-skill/`，根目录仅保留 marketplace 元数据
+- marketplace.json 的 source 路径改为 `./plugins/cpython-optimize-skill`
+- README 中 Codex 安装命令修正为 `codex plugin add <plugin>@<marketplace>` 格式
+
 ## v0.6.1
 
 - docker-compose 模板所有路径改为环境变量，消除相对路径依赖

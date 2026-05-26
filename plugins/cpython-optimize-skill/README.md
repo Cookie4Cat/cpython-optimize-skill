@@ -34,7 +34,7 @@
 
 ```bash
 codex plugin marketplace add https://github.com/sisibeloved/cpython-optimize-skill
-codex plugin add cpython-optimize-skill
+codex plugin add cpython-optimize-skill@cpython-optimize-skill
 ```
 
 ---

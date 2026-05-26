@@ -20,7 +20,6 @@ TOP_LEVEL_LAYOUT = {
     "tests": "dir",
     "package.json": "file",
     "CHANGELOG.md": "file",
-    ".gitignore": "file",
 }
 
 # hooks/ 内结构
