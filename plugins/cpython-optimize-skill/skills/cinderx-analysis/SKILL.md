@@ -19,6 +19,7 @@ description: 在需要分析 JIT/非JIT 用例性能、dump HIR/LIR、定位性�
 重点关注：
 - 不要在确认进入 CinderX JIT 之前就开始做热点归因
 - 不要在没有热点归因的情况下直接盲看 HIR
+- 如果现象是 crash / `SIGSEGV`，先拿 `gdb bt full` 或 core dump，再解释 HIR
 - HIR 是否退化
 - pass 前后形态是否变化
 - deopt idx、frame layout、调用约定是否异常

@@ -18,6 +18,36 @@
 4. 看 `jit.log` 最后一个函数
 5. 必要时直接 `gdb` / core dump
 
+## Native crash 取证门禁
+
+看到 `SIGSEGV`、`exit 139`、`Segmentation fault` 或 `core dumped` 时，先冻结“猜测式修复”和反复加日志，保留真实复现命令。
+
+最低证据：
+
+- 完整命令和关键环境变量
+- 退出信号 / exit status
+- `gdb` 下的 `bt full`
+- 可用时保存 core dump 摘要
+- JIT 相关 crash 额外保留 `jit.log`、HIR dump 或说明为何无法采集
+
+示例：
+
+```bash
+gdb --args python <run_benchmark.py> <真实参数>
+(gdb) run
+(gdb) bt full
+(gdb) info registers
+```
+
+已有 core 时：
+
+```bash
+gdb <python> <core>
+(gdb) bt full
+```
+
+日志不能替代 native crash 证据。只有在 `gdb` / core dump 不可用且原因已记录时，才退而使用更细日志缩小范围。
+
 ## 常见误判
 
 - `JIT log` 里没有 `__main__:*`，不代表没有进入 JIT

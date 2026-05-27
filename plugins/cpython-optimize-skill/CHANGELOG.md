@@ -2,6 +2,15 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.7.1
+
+- 增加 CPython/CinderX 编译前 API/ABI 版本门禁，防止目标容器为 Python 3.14.3 时误用 Python 3.14.5 API
+- 强化 `SIGSEGV` / `exit 139` crash triage：优先 `gdb bt full`、core dump、HIR/JIT 证据，禁止用反复加日志替代 native 取证
+- 增加远程命令输出契约：首次执行必须保留 stdout/stderr、exit status、日志路径或 tmux pane
+- 增加远程异常耗时处理：网络卡顿需使用 timeout、镜像/代理/DNS 诊断，并在需要决策时询问用户
+- 将 `agents/` 角色文档统一重写为中文，并增加中文模板验证
+- 新增 pressure scenarios 15-18 覆盖上述失败模式
+
 ## v0.7.0
 
 - 仓库改为 marketplace 结构：插件内容移至 `plugins/cpython-optimize-skill/`，根目录仅保留 marketplace 元数据

@@ -9,12 +9,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = ROOT / "skills"
+AGENTS_DIR = ROOT / "agents"
 
 # 期望的顶层结构：目录/文件名 -> 类型（dir/file）
 TOP_LEVEL_LAYOUT = {
     ".claude-plugin": "dir",
     ".codex-plugin": "dir",
     "hooks": "dir",
+    "agents": "dir",
     "skills": "dir",
     "tests": "dir",
     "package.json": "file",
@@ -88,6 +90,23 @@ def validate_skill_dir(path: Path) -> None:
             raise AssertionError(f"技能目录含非标准子目录: {child.relative_to(ROOT)}")
 
 
+def validate_agent_docs() -> None:
+    agent_docs = sorted(AGENTS_DIR.glob("*.md"))
+    if not agent_docs:
+        raise AssertionError("agents/ 下没有 Agent 文档")
+
+    forbidden = ["## Focus", "## Use When", "## Output", "Return:", "Do not "]
+    required = ["## 职责", "## 适用场景", "## 输出要求"]
+    for path in agent_docs:
+        text = read_text(path)
+        for needle in required:
+            if needle not in text:
+                raise AssertionError(f"{path.relative_to(ROOT)} 缺少中文章节: {needle}")
+        for needle in forbidden:
+            if needle in text:
+                raise AssertionError(f"{path.relative_to(ROOT)} 仍包含英文模板: {needle}")
+
+
 def main() -> int:
     # 1. 顶层目录结构
     validate_directory_layout(ROOT, TOP_LEVEL_LAYOUT, "")
@@ -109,6 +128,9 @@ def main() -> int:
 
     for skill_dir in skill_dirs:
         validate_skill_dir(skill_dir)
+
+    # 5. agents/ 角色文档应保持中文模板
+    validate_agent_docs()
 
     print("layout validation passed")
     return 0

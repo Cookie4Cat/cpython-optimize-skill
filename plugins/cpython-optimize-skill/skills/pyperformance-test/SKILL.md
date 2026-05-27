@@ -147,6 +147,11 @@ Arm vs x86 对比属于第三条线：
 4. 看 `jit.log` 最后一个函数
 5. 必要时直接 `gdb` / core dump
 
+硬性分流：
+- 一旦出现 `SIGSEGV`、`exit 139`、`Segmentation fault` 或 `core dumped`，先保留真实命令和环境，再进入 `gdb` / core dump。
+- JIT 相关 crash 用同一条真实 worker 命令叠加 `PYTHONJITLOGFILE` / `PYTHONJITDUMPFINALHIR` 取证。
+- 日志不能替代 native crash 证据；除非 `gdb` 和 core 都不可用并已记录原因，否则不要用反复加 print/log 的方式主导定位。
+
 常见误判：
 - `JIT log` 里没有 `__main__:*`，不代表没有进入 JIT
 - `venv python` 手工导入成功，不代表 `pyperformance` worker 里也成功

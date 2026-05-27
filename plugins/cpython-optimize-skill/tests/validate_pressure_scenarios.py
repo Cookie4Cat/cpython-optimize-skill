@@ -32,6 +32,7 @@ def main() -> int:
     )
     entry = read(ROOT / "skills" / "using-cpython-optimize" / "SKILL.md")
     remote = read(ROOT / "skills" / "remote-environment" / "SKILL.md")
+    build = read(ROOT / "skills" / "cpython-build" / "SKILL.md")
     scenarios = read(ROOT / "tests" / "pressure-scenarios.md")
 
     require(scenarios, "场景 1", "pressure scenarios")
@@ -44,6 +45,10 @@ def main() -> int:
     require(scenarios, "场景 12", "pressure scenarios")
     require(scenarios, "场景 13", "pressure scenarios")
     require(scenarios, "场景 14", "pressure scenarios")
+    require(scenarios, "场景 15", "pressure scenarios")
+    require(scenarios, "场景 16", "pressure scenarios")
+    require(scenarios, "场景 17", "pressure scenarios")
+    require(scenarios, "场景 18", "pressure scenarios")
 
     for needle in [
         "run_benchmark.py",
@@ -81,6 +86,10 @@ def main() -> int:
         "宿主机独立目录",
         "性能口径",
         "baseline",
+        "API/ABI",
+        "输出契约",
+        "SIGSEGV",
+        "异常耗时",
     ]:
         require(entry, needle, "entry skill")
 
@@ -91,8 +100,24 @@ def main() -> int:
         "独立宿主机目录",
         "rsync",
         "Docker",
+        "输出契约",
+        "exit status",
+        "无输出",
+        "timeout",
+        "网络卡顿",
+        "询问用户",
     ]:
         require(remote, needle, "remote skill")
+
+    for needle in [
+        "API/ABI 版本门禁",
+        "Python 3.14.3",
+        "3.14.5",
+        "patchlevel.h",
+        "SOABI",
+        "目标解释器",
+    ]:
+        require(build, needle, "build skill")
 
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
     for needle in [
@@ -129,6 +154,10 @@ def main() -> int:
         "LD_LIBRARY_PATH",
         "compile storm",
         "SIGSEGV",
+        "gdb",
+        "bt full",
+        "core dump",
+        "日志不能替代",
     ]:
         require(triage, needle, "crash triage reference")
 

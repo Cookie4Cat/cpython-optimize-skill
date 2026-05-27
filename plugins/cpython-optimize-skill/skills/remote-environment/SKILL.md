@@ -35,6 +35,41 @@ description: 在需要连接远程服务器、配置 SSH、创建独立宿主机
 - 代码同步默认优先 `rsync`，不要手工逐文件拷贝
 - 如果远端还没安装 `rsync`，先提醒用户安装，再开始同步
 
+## 远程命令输出契约
+
+每条非交互式远程命令第一次执行时，就要能回答：
+
+- stdout/stderr 在哪里看
+- exit status 是多少
+- 长任务日志文件在哪里
+- 如果进了 `tmux`，pane/window 名称是什么
+
+推荐模式：
+
+```bash
+ssh <host> 'bash -lc '"'"'set -o pipefail; <command> 2>&1; status=$?; printf "\n[exit status=%s]\n" "$status"; exit "$status"'"'"''
+```
+
+长任务默认进 `tmux`，并用 `tee` 固化输出：
+
+```bash
+<long-command> 2>&1 | tee logs/<task>.log
+tail -n 80 logs/<task>.log
+```
+
+如果出现“无输出”，先查 exit status、日志文件、`tmux capture-pane`、进程状态和磁盘/网络状态。不要为了补输出盲目重复执行同一条可能有副作用的构建、安装或 benchmark 命令。
+
+## 异常耗时处理
+
+区分正常长编译和异常网络卡顿：
+
+- 编译类任务：只要 CPU/日志持续变化，可以继续观察并定期汇报
+- 网络类任务：`pip`、`git clone/fetch`、源码下载、包安装长时间无新增输出时，优先怀疑 DNS、代理、镜像源或连接问题
+- 远程网络命令尽量带 `timeout`、进度输出、镜像源或缓存策略
+- 超过预期仍无进度时，先诊断代理、DNS、镜像连通性和当前进程，再向用户报告并询问用户是继续等待、换镜像、跳过，还是由用户处理环境
+
+不要在网络卡顿时无限等待，也不要在没有诊断结果时擅自改代理或全局网络配置。
+
 ## 最小命令
 
 ```bash

@@ -11,6 +11,10 @@ description: Use when 开始任何 CPython/CinderX 性能优化任务时自动�
 
 - 远程环境默认进入 Docker 容器隔离，不直接在裸机上工作
 - 先做项目隔离（宿主机独立目录），再做环境隔离（Docker 容器）
+- 构建前先做 API/ABI 版本门禁，以目标解释器和容器内头文件为事实源
+- `SIGSEGV` / `exit 139` / core dump 先走 `gdb`、core 和 HIR 证据链，不用反复加日志替代 crash triage
+- 远程命令第一次执行就要有输出契约：stdout/stderr、exit status、日志路径或 tmux pane
+- 远程异常耗时要区分正常编译和网络卡顿；无进度时先诊断，必要时询问用户
 - 先拿可复现证据，再下根因结论
 - 用结构化产物沉淀实验结果，避免只留口头结论
 
@@ -89,6 +93,10 @@ digraph workflow {
 
 - 只看功能不看性能 → `cinderx-test` + 单 `run_benchmark.py` + 开 HIR dump
 - 复现 crash → 单 `run_benchmark.py --worker` + `jit.log` / HIR
+- 测试出现 `SIGSEGV` → 保留真实命令 + `gdb bt full` / core dump + 必要 HIR
+- 编译报 CPython API 不存在 → 先核对目标解释器、`SOABI`、头文件版本，再决定兼容实现
+- 远程命令无输出 → 查 exit status、日志、tmux pane 和进程，不盲目重复执行
+- 远程网络/下载异常耗时 → 加 timeout、测镜像/代理/DNS，无法判断时询问用户
 - 正式 benchmark → 先关 HIR dump，用 `python -m pyperformance run`
 - 修掉 crash / 找到根因 → 必须写文档（调用 `experiment-documentation`）
 

@@ -45,8 +45,10 @@ description: 需要端到端复现、定位并记录 CinderX/pyperformance crash
 
 - crash log 或退出信号
 - 真实 worker 命令
-- `gdb bt` 或 core dump 摘要
+- `gdb bt full` 或 core dump 摘要
 - JIT 相关问题必须包含 `jit.log`、HIR 或说明为何无法采集
+
+`SIGSEGV` / `exit 139` 不是普通功能失败。不要把反复加日志作为主路径；先用 `gdb`、core dump 和同一条真实命令叠加 HIR/JIT dump 建证据链。
 
 ### Gate 3: 根因输出
 
