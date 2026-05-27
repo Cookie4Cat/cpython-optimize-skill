@@ -29,6 +29,22 @@ description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分�
 | `cinderx-jit-analyst` | CinderX JIT、HIR/LIR、机器码优化点 |
 | `cinderx-platform-analyst` | Kunpeng/x86、ISA、微架构差异 |
 
+## 反问 Gate
+
+能从仓库、环境、日志或历史产物查证的信息先查证，不问用户。以下信息无法唯一确定时必须暂停反问：
+
+| 缺口 | 典型问题 |
+|------|----------|
+| 目标路线 | 三个主 Workflow、supporting workflow 或验证等级无法唯一选择 |
+| 实验轴 | benchmark、平台、baseline/candidate、JIT 口径或环境句柄缺失 |
+| 高成本动作 | 清理环境、bootstrap、在线安装、编译 CinderX、全量 Runtime、全量 pyperformance |
+| 运行中异常 | 远端无输出、timeout、网络卡顿时需要继续等待、换镜像、复用缓存或中止 |
+| 证据链断裂 | crash 缺真实命令/core，结果比较缺配对 `run.json`，平台分析缺平台对 |
+
+平台映射：Codex 优先用 `request_user_input`，Claude Code 优先用 `AskUserQuestion`；工具不可用时，退化为普通文本选择题并等待用户回答。
+
+需要结构化选项时读取 `references/clarifying-question-templates.md`，复用其中的 `question_id`、选项和文本降级格式。
+
 ## Environment Verifier 三态
 
 | 状态 | 下一步 |

@@ -18,6 +18,12 @@
 - `cinderx-hir-lir-analyze`
 - `cinderx-optimization-report`
 
+## 反问 Gate
+
+- 平台对、CPU 型号、benchmark 集合或性能口径缺失时，询问用户。
+- perf、硬件计数器、CPU governor 或 hugepages 需要权限/变更，且无法安全默认时，询问。
+- 系统性扫描范围过大时，询问低成本子集、时间预算和是否允许晋级到 L3/L4。
+
 ## 输出要求
 
 返回平台指纹、ISA/微架构差异点、perf 证据、benchmark 覆盖矩阵、候选优化点、预期收益用例和最小验证命令。

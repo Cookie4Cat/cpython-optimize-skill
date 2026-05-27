@@ -90,6 +90,7 @@ def require_all(text: str, needles: list[str], context: str) -> None:
 
 def main() -> int:
     entry = skill("using-cpython-optimize")
+    question_templates = read(SKILLS / "using-cpython-optimize" / "references" / "clarifying-question-templates.md")
     skill_texts = {name: skill(name) for name in PROFESSIONAL_SKILLS}
     agent_texts = {name: agent(name) for name in PROFESSIONAL_AGENTS}
     workflows = {
@@ -106,7 +107,7 @@ def main() -> int:
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
     runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
 
-    for number in range(1, 32):
+    for number in range(1, 34):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -138,12 +139,35 @@ def main() -> int:
             "可复用",
             "新环境",
             "被破坏",
+            "反问 Gate",
+            "request_user_input",
+            "AskUserQuestion",
+            "clarifying-question-templates.md",
         ],
         "entry skill",
     )
+    require_all(
+        question_templates,
+        [
+            "question_id",
+            "request_user_input",
+            "AskUserQuestion",
+            "文本降级",
+            "workflow_route",
+            "validation_level",
+            "environment_target",
+            "destructive_clean",
+            "remote_stall",
+            "ab_slot",
+            "crash_evidence",
+            "result_artifacts",
+            "scope_budget",
+        ],
+        "clarifying question templates",
+    )
 
     for name, text in agent_texts.items():
-        require_all(text, ["## 职责", "## 适用场景", "## 可调用技能", "## 输出要求"], f"{name} agent")
+        require_all(text, ["## 职责", "## 适用场景", "## 可调用技能", "## 反问 Gate", "## 输出要求"], f"{name} agent")
 
     require_all(
         agent_texts["cinderx-environment-verifier"],
@@ -174,22 +198,22 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-env-clean"],
-        ["editable install", "build 目录", "venv", "容器", "pyperformance env", "错版本头文件", "保留 cache"],
+        ["editable install", "build 目录", "venv", "容器", "pyperformance env", "错版本头文件", "保留 cache", "反问 Gate"],
         "cinderx-env-clean",
     )
     require_all(
         skill_texts["cinderx-env-bootstrap"],
-        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance"],
+        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "反问 Gate"],
         "cinderx-env-bootstrap",
     )
     require_all(
         skill_texts["cinderx-remote-lab-ops"],
-        ["SSH", "tmux", "rsync", "docker compose", "stdout/stderr", "exit status", "timeout", "日志路径"],
+        ["SSH", "tmux", "rsync", "docker compose", "stdout/stderr", "exit status", "timeout", "日志路径", "反问 Gate"],
         "cinderx-remote-lab-ops",
     )
     require_all(
         skill_texts["cinderx-ab-run-slot"],
-        ["baseline", "candidate", "CPU affinity", "绑核", "结果目录", "不重叠", "并行"],
+        ["baseline", "candidate", "CPU affinity", "绑核", "结果目录", "不重叠", "并行", "反问 Gate"],
         "cinderx-ab-run-slot",
     )
     require_all(
@@ -209,17 +233,17 @@ def main() -> int:
     )
     require_all(
         skill_texts["pyperformance-suite-run"],
-        ["python -m pyperformance run", "warmup", "loops", "run.json", "subset", "full", "正式"],
+        ["python -m pyperformance run", "warmup", "loops", "run.json", "subset", "full", "正式", "反问 Gate"],
         "pyperformance-suite-run",
     )
     require_all(
         skill_texts["pyperformance-result-compare"],
-        ["run.json", "speedup.json", "baseline", "candidate", "方差", "噪声", "收益范围", "提交 baseline"],
+        ["run.json", "speedup.json", "baseline", "candidate", "方差", "噪声", "收益范围", "提交 baseline", "反问 Gate"],
         "pyperformance-result-compare",
     )
     require_all(
         skill_texts["cinderx-gdb-core-triage"],
-        ["SIGSEGV", "exit 139", "core dump", "gdb", "bt full", "info registers", "同一真实命令", "日志不能替代"],
+        ["SIGSEGV", "exit 139", "core dump", "gdb", "bt full", "info registers", "同一真实命令", "日志不能替代", "反问 Gate"],
         "cinderx-gdb-core-triage",
     )
     require_all(
@@ -239,7 +263,7 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-isa-microarch-compare"],
-        ["Kunpeng", "x86", "ISA", "cache", "分支预测", "SIMD", "barrier", "hugepages", "perf"],
+        ["Kunpeng", "x86", "ISA", "cache", "分支预测", "SIMD", "barrier", "hugepages", "perf", "反问 Gate"],
         "cinderx-isa-microarch-compare",
     )
     require_all(
@@ -270,6 +294,9 @@ def main() -> int:
             "pyperformance-worker-run",
             "cinderx-gdb-core-triage",
             "cinderx-isa-microarch-compare",
+            "request_user_input",
+            "AskUserQuestion",
+            "clarifying-question-templates.md",
         ],
         "pressure scenarios",
     )

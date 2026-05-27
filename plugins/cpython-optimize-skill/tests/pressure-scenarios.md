@@ -361,3 +361,27 @@
 - 使用 `cinderx-env-validate`、`pyperformance-worker-run`、`cinderx-gdb-core-triage` 等专业 skill
 - 不再出现 `command-observability`、`test-execution`、`native-crash-debugging` 这类泛化入口
 - skill 触发词必须包含 CPython/CinderX、pyperformance、HIR/LIR、SOABI、Kunpeng/x86 等领域对象
+
+## 场景 32：必要信息缺失时必须反问
+
+用户话术示例：
+
+> 远端环境好像坏了，直接帮我清一下，然后跑正式性能吧。
+
+期望行为：
+- 先识别这是清理环境和 L4 性能验证两个高成本/可能破坏性动作
+- 环境句柄、要清理的 workspace、baseline/candidate、benchmark 范围不明确时触发反问
+- Codex 可用时使用 `request_user_input`，Claude Code 可用时使用 `AskUserQuestion`
+- 工具不可用时退化为文本选择题，不直接清理或启动全量 pyperformance
+
+## 场景 33：反问必须复用结构化模板
+
+用户话术示例：
+
+> 我不确定要先跑哪个平台，也不确定是否要全量 pyperformance，你自己看着办。
+
+期望行为：
+- 读取 `clarifying-question-templates.md`
+- 先问最高风险缺口，例如 `workflow_route` 或 `validation_level`
+- 每个问题有稳定 `question_id`、短 `header`、2-3 个互斥选项和推荐项
+- Codex / Claude Code / 文本降级的字段口径一致

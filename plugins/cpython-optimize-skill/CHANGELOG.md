@@ -2,6 +2,14 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.8.1
+
+- 新增统一 `反问 Gate`：当目标路线、实验轴、高成本动作、运行中异常或证据链缺口无法唯一确定时，要求先反问用户
+- 为 orchestrator、environment verifier、runner、benchmark analyst、crash triager、JIT analyst、platform analyst 补充各自必须反问的缺口
+- 为环境清理、bootstrap、远端操作、A/B slot、pyperformance suite/result、gdb/core、ISA/微架构和验证策略补充反问门禁
+- 新增 pressure scenario 32，覆盖必要信息缺失时 `request_user_input` / `AskUserQuestion` 的平台映射和文本降级路径
+- 新增 `clarifying-question-templates.md`，统一结构化反问字段、平台映射、文本降级和 CPython/CinderX 高频模板
+
 ## v0.8.0
 
 - 新增 `validation-strategy` 子技能，定义 L0-L4 验证阶梯、晋级规则、成本预算和缓存复用原则

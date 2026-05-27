@@ -20,6 +20,12 @@ description: Use when CPython/CinderX A/B 性能验证需要分配 baseline/cand
 - 绑核策略写清，例如 `taskset -c 0-15` 与 `taskset -c 16-31`。
 - `cinderx-test` 与 `cpython-baseline` 使用场景明确。
 
+## 反问 Gate
+
+- baseline/candidate 的唯一差异轴不明确时，询问要比较的变量。
+- CPU set、tmux pane、结果目录或容器线无法安全分离时，询问串行执行还是重新分配资源。
+- 用户要求并行但环境 verifier 未确认可并行时，询问是否先做环境审计。
+
 ## 输出
 
 返回两个 run slot 和是否允许并行。无法保证隔离时，要求串行执行。

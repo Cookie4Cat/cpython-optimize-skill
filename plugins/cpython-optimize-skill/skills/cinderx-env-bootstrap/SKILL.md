@@ -15,6 +15,12 @@ description: Use when 需要初始化 CPython/CinderX 实验环境、Docker 双�
 - pyperformance：固定源码、依赖和 worker 环境。
 - pip mirror/cache：优先镜像源和已有缓存，不无限等待在线安装。
 
+## 反问 Gate
+
+- host、workspace、源码路径、Docker 双线或 Python 微版本缺失且无法唯一推断时，询问用户。
+- 在线依赖下载异常慢时，询问继续等待、切镜像、复用 cache 或中止。
+- `cinderx-test` 与 `cpython-baseline` 的目标线不明确时，询问是调试线还是正式对照线。
+
 ## 内置资源
 
 - `templates/cpython-baseline/Dockerfile`

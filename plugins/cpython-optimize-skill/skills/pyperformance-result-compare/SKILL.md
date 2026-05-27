@@ -23,4 +23,10 @@ description: Use when 已有 pyperformance run.json 或 speedup.json，需要比
 - 收益范围、无收益范围、未验证范围
 - 需要回到 `pyperformance-worker-run` 的异常用例
 
+## 反问 Gate
+
+- baseline/candidate `run.json`、`speedup.json` 或口径 baseline 缺失且无法从路径/文件推断时，询问用户。
+- 方差或异常值使结论不稳定，需要补跑、扩大样本或降级结论时，询问。
+- 用户要求收益外推到全量，但当前只覆盖单 benchmark 或小集合时，询问是否晋级验证。
+
 输出可信收益、可信回归、噪声项、补测建议和不能外推的范围。

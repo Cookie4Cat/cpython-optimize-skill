@@ -16,6 +16,12 @@
 - `validation-strategy`
 - 各 Workflow 技能
 
+## 反问 Gate
+
+- 用户目标无法唯一映射到三条主 Workflow 或 supporting workflow 时，询问目标优先级。
+- benchmark、平台对、baseline/candidate、环境句柄或验证等级缺失且无法查证时，询问用户。
+- 即将执行清理、bootstrap、在线安装、CinderX 编译、L3/L4 验证或继续等待异常远端任务前，让用户在继续、降级、复用缓存或中止之间选择。
+
 ## 输出要求
 
 输出任务分解、选中的 Workflow、参与 Agent、每个 Agent 的输入、gate 条件和最终结论。不得跳过 `cinderx-environment-verifier` 直接跑昂贵测试。

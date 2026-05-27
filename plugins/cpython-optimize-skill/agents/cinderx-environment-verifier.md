@@ -18,6 +18,12 @@
 - `cinderx-remote-lab-ops`
 - `cinderx-smoke-check`
 
+## 反问 Gate
+
+- host、workspace、container line、历史环境有多个候选且无法从上下文唯一确定时，询问要复用哪一个。
+- `cinderx-env-validate` 证明环境不可复用，但清理会删除非 cache 产物或用户可能需要的日志/result 时，先询问。
+- Python 微版本、`SOABI`、`patchlevel.h` 或 CinderX install 不一致，且无法判断应修环境还是改兼容实现时，询问用户取舍。
+
 ## 输出要求
 
 必须返回三态之一：

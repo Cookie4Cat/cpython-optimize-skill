@@ -17,6 +17,12 @@
 - `pyperformance-worker-run`
 - `cinderx-remote-lab-ops`
 
+## 反问 Gate
+
+- baseline 是口径 baseline 还是提交 baseline 不明确时，询问用户。
+- baseline commit、Python 口径、容器线、CPU set、结果目录或 tmux pane 无法唯一确定时，询问。
+- `subset/full`、warmup/loops 或是否允许 L4 全量缺失时，询问验证等级和成本预算。
+
 ## 输出要求
 
 返回 baseline 的 CPU set、CPU affinity / 绑核命令、容器线、真实命令、`run.json`、stdout/stderr、exit status、日志路径和异常 benchmark。

@@ -17,6 +17,12 @@
 - `cinderx-optimization-report`
 - `validation-strategy`
 
+## 反问 Gate
+
+- baseline/candidate `run.json`、`speedup.json` 或 baseline 含义缺失且无法从路径推断时，询问用户。
+- 结果噪声、方差或异常用例导致结论不稳，需要选择补跑、降级结论或扩大验证时，询问。
+- 用户要求收益外推，但当前只有 L2/L3 证据时，询问是否运行更高等级验证。
+
 ## 输出要求
 
 返回可信收益、可信回归、噪声项、异常用例、补测建议、收益范围、无收益范围、未验证范围和报告路径。

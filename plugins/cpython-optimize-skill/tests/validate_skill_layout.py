@@ -161,7 +161,7 @@ def validate_agent_docs() -> None:
         raise AssertionError(f"agents/ 缺少 CPython/CinderX 专业 Agent: {sorted(missing)}")
 
     forbidden = ["## Focus", "## Use When", "## Output", "Return:", "Do not "]
-    required = ["## 职责", "## 适用场景", "## 可调用技能", "## 输出要求"]
+    required = ["## 职责", "## 适用场景", "## 可调用技能", "## 反问 Gate", "## 输出要求"]
     for path in agent_docs:
         text = read_text(path)
         for needle in required:

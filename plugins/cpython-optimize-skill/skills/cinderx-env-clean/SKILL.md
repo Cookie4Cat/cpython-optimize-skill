@@ -19,6 +19,12 @@ description: Use when CPython/CinderX lab 已存在但被污染、版本漂移�
 
 默认保留 cache：pip cache、Docker layer、可复用源码 checkout、历史 `run.json` / `speedup.json` / 日志。要删除 cache 必须说明原因。
 
+## 反问 Gate
+
+- 清理会删除非 cache 产物、历史日志、`run.json`、core dump、HIR/jit.log 或用户工作目录时，必须询问。
+- 同一 host/workspace 下有多个可疑环境且无法确认目标环境时，询问要清理哪一个。
+- 无法判断应清理重建还是保留现场继续取证时，询问用户优先级。
+
 ## 输出
 
 - 清理前环境指纹

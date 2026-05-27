@@ -17,6 +17,12 @@
 - `pyperformance-worker-run`
 - `cinderx-remote-lab-ops`
 
+## 反问 Gate
+
+- candidate patch、commit、editable install 或 CinderX flags 有多个候选时，询问选择。
+- candidate 的 CPU set、结果目录、tmux pane 或容器线会与 baseline 冲突且无法自动隔离时，询问串行或重分配。
+- candidate smoke 失败、crash 或异常慢时，询问是否转入 crash/JIT 分支还是中止性能验证。
+
 ## 输出要求
 
 返回 candidate 的 CPU set、CPU affinity / 绑核命令、容器线、真实命令、`run.json`、stdout/stderr、exit status、日志路径和异常 benchmark。
