@@ -9,7 +9,7 @@
 > 我想在 Kunpeng 上验证 `regex_compile` 是否真的进了 CinderX JIT，先别看性能。
 
 期望行为：
-- 引导加载 `pyperformance-test` 技能
+- 引导加载 `pyperformance-worker-run`、`cinderx-jit-entry-check` 和 `cinderx-hir-dump`
 - 优先推荐单个 `run_benchmark.py`
 - 明确先开 HIR dump
 - 提醒检查 worker 是否真的进入 JIT
@@ -21,7 +21,7 @@
 > 我要比较 stock CPython JIT 和 CinderX 在 Docker 里的 pyperformance 数据。
 
 期望行为：
-- 引导加载 `docker-runtime` 技能
+- 先由 `cinderx-environment-verifier` 调用 `cinderx-env-validate`
 - 明确这是 Docker 双线里的 `cpython-baseline`
 - 不直接把 `cinderx-test` 调试线当正式对照
 
@@ -33,8 +33,8 @@
 
 期望行为：
 - 联想到 driver / manager / worker / bench_command 子进程模型
-- 引导加载 `pyperformance-test` 技能
-- 必要时查看 `references/pyperformance-crash-triage.md`
+- 引导加载 `pyperformance-worker-run`
+- crash 线索明显时加载 `cinderx-gdb-core-triage` 并查看 crash triage reference
 
 ## 场景 4：用户要复现 native crash
 
@@ -54,7 +54,7 @@
 > 这次修复要沉淀成文档，后面给别的 Agent 复用。
 
 期望行为：
-- 引导加载 `experiment-documentation` 技能
+- 引导加载 `cinderx-optimization-report` 技能
 - 强调背景、复现命令、证据链、根因、修复、回归结果
 
 ## 场景 6：用户要分析性能退化
@@ -64,7 +64,7 @@
 > `scimark` 退化了，帮我对比 HIR 和性能，找根因。
 
 期望行为：
-- 引导加载 `cinderx-analysis` 技能
+- 引导加载 `cinderx-jit-analyst`，使用 `cinderx-jit-entry-check` 和 `cinderx-hir-lir-analyze`
 - 区分 JIT 与非 JIT 路线
 - 强调先对齐命令口径、解释器和依赖，再比较 HIR / LIR / 机器码
 
@@ -77,7 +77,7 @@
 期望行为：
 - 联想到 Docker 调试应优先保留一个长连接交互终端
 - 不把反复 `docker exec` 当成主路径
-- 引导加载 `docker-runtime` 技能
+- 引导加载 `cinderx-remote-lab-ops` 和 `cinderx-env-bootstrap`
 
 ## 场景 8：用户要做 Docker 正式对照，但先提到了 crash
 
@@ -206,3 +206,158 @@
 - 网络相关命令要有超时、镜像源或缓存策略
 - 长时间无新增输出时先诊断 DNS/代理/连接/进度
 - 需要继续等待、换镜像、跳过或让用户处理时及时询问用户
+
+## 场景 19：根据双平台性能差距定位优化点
+
+用户话术示例：
+
+> Kunpeng 和 x86 上同一个 benchmark 差距很大，帮我找根因并试一个优化点。
+
+期望行为：
+- 引导加载 `workflow-cross-platform-delta-triage` 和 `validation-strategy`
+- 先排除环境漂移，再讨论 ISA / 微架构 / JIT lowering 差异
+- 不默认跑全量 pyperformance，先用单 benchmark 和相关小集合验证
+- 优化后说明收益范围、无收益范围和下一阶验证条件
+
+## 场景 20：根据已知特性做性能优化
+
+用户话术示例：
+
+> 我知道这个特性会减少某条慢路径，帮我改代码并补用例验证收益。
+
+期望行为：
+- 引导加载 `workflow-feature-driven-optimization` 和 `validation-strategy`
+- 先写清特性、预期影响路径和受影响用例
+- 先补功能/行为用例，再做目标性能验证
+- 只有通过低阶验证后，才晋级到相关子集或全量验证
+
+## 场景 21：系统性寻找平台差异优化点
+
+用户话术示例：
+
+> 帮我系统分析代码和平台 ISA / 微架构差异，找可能优化点，再看哪些用例收益。
+
+期望行为：
+- 引导加载 `workflow-platform-differential-discovery` 和 `validation-strategy`
+- 先建立代码路径、平台差异点和 benchmark 覆盖矩阵
+- 优先低成本扫描，不直接进入三小时全量性能实验
+- 每个候选点绑定预期收益用例，再分层验证收益扩散范围
+
+## 场景 22：顶层任务不应误入子流程
+
+用户话术示例：
+
+> 这次是端到端找优化收益，不只是看 HIR 或跑一次正式对照。
+
+期望行为：
+- 先在主 Workflow 中选择用户目标入口
+- 把 `workflow-jit-optimization-analysis` 识别为 Supporting Workflow，只在需要单用例 JIT 证据时调用
+- 把 `workflow-pyperformance-regression` 识别为 Supporting Workflow，只在 L3/L4 正式性能验证时调用
+- 不用 supporting workflow 取代主 Workflow
+
+## 场景 23：长任务中运行时信号触发 skill 提醒
+
+用户话术示例：
+
+> 一个定位任务跑了很久，中间还经历过上下文压缩。后来 Bash 输出里突然出现 Segmentation fault，但自然语言已经不会重新触发技能了。
+
+期望行为：
+- `PostToolUse` runtime hook 捕获 `SIGSEGV` / `exit 139` / `core dump` 等工具输出信号
+- hook 只注入短 `additionalContext` 提醒，不重新塞入完整 `using-cpython-optimize`
+- Agent 根据提醒加载 `workflow-cinderx-crash-triage`，回到 `gdb bt full`、core dump、HIR dump 证据链
+- 遇到 `timeout`、网络卡顿或远程无输出时提醒加载 `cinderx-remote-lab-ops` 并及时询问用户
+
+## 场景 24：crash 取证应进入 CinderX 专业 skill
+
+用户话术示例：
+
+> 单测 SIGSEGV 了，不要再只加日志，我需要可定位的 native 证据。
+
+期望行为：
+- 加载 `cinderx-gdb-core-triage`，而不是把 crash 逻辑塞在 pyperformance 或 JIT 分析里
+- 保留同一条真实命令、退出信号、core dump 和 `gdb bt full`
+- JIT 相关时再叠加 HIR dump / jit.log
+- `cinderx-remote-lab-ops` 负责命令输出、日志路径和 exit status
+
+## 场景 25：远程命令输出契约应独立复用
+
+用户话术示例：
+
+> 远端命令没输出，但这个任务不是单纯 SSH 配置问题。
+
+期望行为：
+- 加载 `cinderx-remote-lab-ops`，不要使用泛化命令观测 skill
+- 首次执行就定义 stdout/stderr、日志路径、exit status、tmux pane
+- 对 timeout、异常耗时、网络卡顿和无输出使用同一套诊断规则
+- 输出契约必须绑定到 CPython/CinderX lab 的 host、workspace、container line 和 tmux pane
+
+## 场景 26：单元/功能/Runtime 测试需要独立测试原子 skill
+
+用户话术示例：
+
+> 这次先跑相关 Runtime 和功能测试，不需要 pyperformance。
+
+期望行为：
+- 加载 `cpython-runtime-test-run` 处理单元测试、功能测试、Runtime 测试和聚合测试
+- 根据 `validation-strategy` 选择 L1 / L3 / L4，不默认跑近千条全量 Runtime
+- 失败重跑必须复用原命令和产物路径
+- 不把 correctness 测试塞进 pyperformance worker 或 suite skill
+
+## 场景 27：正式性能结果解读应独立于跑分命令
+
+用户话术示例：
+
+> 我已经有 baseline/run.json 和 candidate/run.json，帮我判断收益是否可信。
+
+期望行为：
+- 加载 `pyperformance-result-compare`，而不是重新进入 pyperformance 跑分
+- 明确 baseline、candidate、speedup.json、方差、噪声和异常用例
+- 输出收益范围、无收益范围、未验证范围
+- 需要补跑时再加载 `pyperformance-worker-run` 或 `pyperformance-suite-run`
+
+## 场景 28：平台差异分析应独立于 JIT 细节
+
+用户话术示例：
+
+> 帮我系统看 Kunpeng 和 x86 的 ISA / 微架构差异，先别陷进某个 HIR pass。
+
+期望行为：
+- 加载 `cinderx-isa-microarch-compare`
+- 先建立 ISA、微架构、perf、cache、分支预测、SIMD、lowering 和 benchmark 覆盖矩阵
+- 只有定位到 JIT lowering 或 HIR/LIR 形态差异时，再加载 `cinderx-hir-lir-analyze`
+- 每个候选优化点绑定预期收益用例和最小验证命令
+
+## 场景 29：环境 verifier 三态决策
+
+用户话术示例：
+
+> 这个 Kunpeng 环境之前用过，但不知道还能不能复用。
+
+期望行为：
+- `cinderx-environment-verifier` 先调用 `cinderx-env-validate`
+- 可复用返回 `reusable`
+- 新环境返回 `needs_bootstrap` 并调用 `cinderx-env-bootstrap`
+- 被破坏环境返回 `needs_clean_bootstrap`，先 `cinderx-env-clean` 再 bootstrap
+
+## 场景 30：A/B 并行跑分需要 CinderX slot 分配
+
+用户话术示例：
+
+> baseline 和 candidate 可以并行跑，只要别抢同一批 CPU。
+
+期望行为：
+- orchestrator 调用 `cinderx-ab-run-slot`
+- baseline 交给 `pyperformance-baseline-runner`
+- candidate 交给 `pyperformance-candidate-runner`
+- CPU affinity / 绑核、结果目录、tmux pane、容器线都不冲突
+
+## 场景 31：技能必须是 CPython/CinderX 专业动作
+
+用户话术示例：
+
+> 这个仓不是通用性能优化工具箱，别给我泛化 skill。
+
+期望行为：
+- 使用 `cinderx-env-validate`、`pyperformance-worker-run`、`cinderx-gdb-core-triage` 等专业 skill
+- 不再出现 `command-observability`、`test-execution`、`native-crash-debugging` 这类泛化入口
+- skill 触发词必须包含 CPython/CinderX、pyperformance、HIR/LIR、SOABI、Kunpeng/x86 等领域对象

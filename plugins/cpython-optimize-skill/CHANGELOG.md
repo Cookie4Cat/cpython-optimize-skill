@@ -2,6 +2,20 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.8.0
+
+- 新增 `validation-strategy` 子技能，定义 L0-L4 验证阶梯、晋级规则、成本预算和缓存复用原则
+- 新增 `workflow-cross-platform-delta-triage`，用于双平台性能差距根因定位和收益扩散验证
+- 新增 `workflow-feature-driven-optimization`，用于已知特性驱动的代码优化、功能用例和性能验证
+- 新增 `workflow-platform-differential-discovery`，用于系统分析 ISA / 微架构差异并发现优化点
+- 将 `using-cpython-optimize` 压薄为 Orchestrator router，明确 Workflow → Agent → Skill 三层分发
+- 将 workflow 分为主 Workflow 和 Supporting Workflow，避免旧流程被误用为端到端优化入口
+- 新增 Agent 层：`cinderx-orchestrator`、`cinderx-environment-verifier`、baseline/candidate runner、benchmark analyst、crash triager、JIT analyst、platform analyst
+- 大幅重切专业 skill：拆出 `cinderx-env-validate`、`cinderx-env-clean`、`cinderx-env-bootstrap`、`cinderx-remote-lab-ops`、`cinderx-ab-run-slot`、`pyperformance-worker-run`、`pyperformance-suite-run`、`cinderx-gdb-core-triage`、`cinderx-hir-dump`、`cinderx-isa-microarch-compare` 等 CPython/CinderX 专业动作
+- 移除 `SessionStart` 全量注入 hook，避免启动、恢复和压缩后重复消耗 token
+- 新增 `PostToolUse` 运行中信号 hook，在 Bash 输出出现 CinderX crash、timeout、网络卡顿或远程无输出时注入短提醒
+- 新增 pressure scenarios 19-31 覆盖准确、高效、workflow 分层、Agent 层、运行中 hook 路由和专业 skill 边界
+
 ## v0.7.1
 
 - 增加 CPython/CinderX 编译前 API/ABI 版本门禁，防止目标容器为 Python 3.14.3 时误用 Python 3.14.5 API

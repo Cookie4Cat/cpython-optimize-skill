@@ -7,10 +7,70 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILLS = ROOT / "skills"
+AGENTS = ROOT / "agents"
+
+PROFESSIONAL_SKILLS = [
+    "cinderx-env-validate",
+    "cinderx-env-clean",
+    "cinderx-env-bootstrap",
+    "cinderx-remote-lab-ops",
+    "cinderx-ab-run-slot",
+    "cpython-runtime-test-run",
+    "cinderx-smoke-check",
+    "pyperformance-worker-run",
+    "pyperformance-suite-run",
+    "pyperformance-result-compare",
+    "cinderx-gdb-core-triage",
+    "cinderx-hir-dump",
+    "cinderx-jit-entry-check",
+    "cinderx-hir-lir-analyze",
+    "cinderx-isa-microarch-compare",
+    "cinderx-optimization-report",
+    "validation-strategy",
+]
+
+PROFESSIONAL_AGENTS = [
+    "cinderx-orchestrator",
+    "cinderx-environment-verifier",
+    "pyperformance-baseline-runner",
+    "pyperformance-candidate-runner",
+    "pyperformance-benchmark-analyst",
+    "cinderx-crash-triager",
+    "cinderx-jit-analyst",
+    "cinderx-platform-analyst",
+]
+
+GENERIC_OR_OLD_SKILLS = [
+    "remote-environment",
+    "remote-workspace",
+    "command-observability",
+    "docker-runtime",
+    "docker-lab-runtime",
+    "cpython-build",
+    "cpython-build-install",
+    "test-execution",
+    "pyperformance-test",
+    "pyperformance-benchmark",
+    "benchmark-result-analysis",
+    "native-crash-debugging",
+    "cinderx-analysis",
+    "cinderx-jit-analysis",
+    "platform-differential-analysis",
+    "experiment-documentation",
+]
 
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def skill(name: str) -> str:
+    return read(SKILLS / name / "SKILL.md")
+
+
+def agent(name: str) -> str:
+    return read(AGENTS / f"{name}.md")
 
 
 def require(text: str, needle: str, context: str) -> None:
@@ -18,148 +78,206 @@ def require(text: str, needle: str, context: str) -> None:
         raise AssertionError(f"{context} 缺少关键信号: {needle}")
 
 
+def forbid(text: str, needle: str, context: str) -> None:
+    if needle in text:
+        raise AssertionError(f"{context} 仍包含泛化或旧边界信号: {needle}")
+
+
+def require_all(text: str, needles: list[str], context: str) -> None:
+    for needle in needles:
+        require(text, needle, context)
+
+
 def main() -> int:
-    pyperf = read(ROOT / "skills" / "pyperformance-test" / "SKILL.md")
-    docker = read(ROOT / "skills" / "docker-runtime" / "SKILL.md")
-    docs = read(ROOT / "skills" / "experiment-documentation" / "SKILL.md")
-    case = read(ROOT / "skills" / "cinderx-analysis" / "SKILL.md")
-    triage = read(
-        ROOT
-        / "skills"
-        / "pyperformance-test"
-        / "references"
-        / "pyperformance-crash-triage.md"
-    )
-    entry = read(ROOT / "skills" / "using-cpython-optimize" / "SKILL.md")
-    remote = read(ROOT / "skills" / "remote-environment" / "SKILL.md")
-    build = read(ROOT / "skills" / "cpython-build" / "SKILL.md")
+    entry = skill("using-cpython-optimize")
+    skill_texts = {name: skill(name) for name in PROFESSIONAL_SKILLS}
+    agent_texts = {name: agent(name) for name in PROFESSIONAL_AGENTS}
+    workflows = {
+        "lab": skill("workflow-remote-cinderx-lab-setup"),
+        "crash": skill("workflow-cinderx-crash-triage"),
+        "regression": skill("workflow-pyperformance-regression"),
+        "jit": skill("workflow-jit-optimization-analysis"),
+        "cross_platform": skill("workflow-cross-platform-delta-triage"),
+        "feature": skill("workflow-feature-driven-optimization"),
+        "platform": skill("workflow-platform-differential-discovery"),
+    }
+    active_docs = "\n".join([entry, *workflows.values(), *agent_texts.values()])
     scenarios = read(ROOT / "tests" / "pressure-scenarios.md")
-
-    require(scenarios, "场景 1", "pressure scenarios")
-    require(scenarios, "场景 6", "pressure scenarios")
-    require(scenarios, "场景 7", "pressure scenarios")
-    require(scenarios, "场景 8", "pressure scenarios")
-    require(scenarios, "场景 9", "pressure scenarios")
-    require(scenarios, "场景 10", "pressure scenarios")
-    require(scenarios, "场景 11", "pressure scenarios")
-    require(scenarios, "场景 12", "pressure scenarios")
-    require(scenarios, "场景 13", "pressure scenarios")
-    require(scenarios, "场景 14", "pressure scenarios")
-    require(scenarios, "场景 15", "pressure scenarios")
-    require(scenarios, "场景 16", "pressure scenarios")
-    require(scenarios, "场景 17", "pressure scenarios")
-    require(scenarios, "场景 18", "pressure scenarios")
-
-    for needle in [
-        "run_benchmark.py",
-        "HIR dump",
-        "worker",
-        "bench_command",
-        "sitecustomize",
-        "真实命令",
-        "性能口径",
-        "baseline 的定义",
-        "跨平台口径",
-    ]:
-        require(pyperf, needle, "pyperformance workflow")
-
-    for needle in [
-        "双线结构",
-        "cpython-baseline",
-        "cinderx-test",
-        "长连接交互终端",
-        "docker exec",
-        "独立宿主机目录",
-        "bind mount",
-        "PIP_INDEX_URL",
-    ]:
-        require(docker, needle, "docker skill")
-
-    for needle in [
-        "run_benchmark.py",
-        "python -m pyperformance run",
-        "cpython-baseline",
-        "cinderx-test",
-        "HIR dump",
-        "只看功能",
-        "正式对照",
-        "宿主机独立目录",
-        "性能口径",
-        "baseline",
-        "API/ABI",
-        "输出契约",
-        "SIGSEGV",
-        "异常耗时",
-    ]:
-        require(entry, needle, "entry skill")
-
-    for needle in [
-        "SSH",
-        "tmux",
-        "裸机",
-        "独立宿主机目录",
-        "rsync",
-        "Docker",
-        "输出契约",
-        "exit status",
-        "无输出",
-        "timeout",
-        "网络卡顿",
-        "询问用户",
-    ]:
-        require(remote, needle, "remote skill")
-
-    for needle in [
-        "API/ABI 版本门禁",
-        "Python 3.14.3",
-        "3.14.5",
-        "patchlevel.h",
-        "SOABI",
-        "目标解释器",
-    ]:
-        require(build, needle, "build skill")
-
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
-    for needle in [
-        "双线区分",
-        "长连接交互终端",
-        "正式对照",
-        "宿主机目录",
-    ]:
-        require(review, needle, "dynamic pressure review")
+    runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
 
-    for needle in [
-        "背景",
-        "复现命令",
-        "证据链",
-        "根因",
-        "修复方法",
-        "回归结果",
-    ]:
-        require(docs, needle, "documentation workflow")
+    for number in range(1, 32):
+        require(scenarios, f"场景 {number}", "pressure scenarios")
 
-    for needle in [
-        "HIR",
-        "LIR",
-        "uop",
-        "机器码",
-        "确认是否真的进入 CinderX JIT",
-        "热点归因",
-        "优化点输出格式",
-        "修改方案",
-    ]:
-        require(case, needle, "case analysis workflow")
+    for name in PROFESSIONAL_SKILLS:
+        require(entry, name, "entry skill professional routing")
 
-    for needle in [
-        "LD_LIBRARY_PATH",
-        "compile storm",
-        "SIGSEGV",
-        "gdb",
-        "bt full",
-        "core dump",
-        "日志不能替代",
-    ]:
-        require(triage, needle, "crash triage reference")
+    for name in PROFESSIONAL_AGENTS:
+        require(entry, name, "entry skill agent routing")
+
+    for old_name in GENERIC_OR_OLD_SKILLS:
+        if (SKILLS / old_name).exists():
+            raise AssertionError(f"泛化或旧 skill 目录未删除: {old_name}")
+        forbid(active_docs, f"`{old_name}`", "active docs")
+
+    if len(entry.splitlines()) > 150:
+        raise AssertionError("entry skill 应保持薄 router，当前行数超过 150")
+
+    require_all(
+        entry,
+        [
+            "Orchestrator",
+            "Workflow",
+            "Agent",
+            "Skill",
+            "environment-verifier",
+            "baseline-runner",
+            "candidate-runner",
+            "crash-triager",
+            "三态",
+            "可复用",
+            "新环境",
+            "被破坏",
+        ],
+        "entry skill",
+    )
+
+    for name, text in agent_texts.items():
+        require_all(text, ["## 职责", "## 适用场景", "## 可调用技能", "## 输出要求"], f"{name} agent")
+
+    require_all(
+        agent_texts["cinderx-environment-verifier"],
+        ["reusable", "needs_bootstrap", "needs_clean_bootstrap", "cinderx-env-validate", "cinderx-env-clean", "cinderx-env-bootstrap"],
+        "environment verifier",
+    )
+    require_all(
+        agent_texts["pyperformance-baseline-runner"],
+        ["baseline", "CPU set", "pyperformance-suite-run", "cinderx-ab-run-slot"],
+        "baseline runner",
+    )
+    require_all(
+        agent_texts["pyperformance-candidate-runner"],
+        ["candidate", "CPU set", "pyperformance-suite-run", "cinderx-ab-run-slot"],
+        "candidate runner",
+    )
+
+    require_all(
+        runtime_router,
+        ["cinderx-gdb-core-triage", "cinderx-remote-lab-ops", "workflow-cinderx-crash-triage", "gdb bt full", "validation-strategy"],
+        "runtime hook router",
+    )
+
+    require_all(
+        skill_texts["cinderx-env-validate"],
+        ["Python 3.14.3", "3.14.5", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable"],
+        "cinderx-env-validate",
+    )
+    require_all(
+        skill_texts["cinderx-env-clean"],
+        ["editable install", "build 目录", "venv", "容器", "pyperformance env", "错版本头文件", "保留 cache"],
+        "cinderx-env-clean",
+    )
+    require_all(
+        skill_texts["cinderx-env-bootstrap"],
+        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance"],
+        "cinderx-env-bootstrap",
+    )
+    require_all(
+        skill_texts["cinderx-remote-lab-ops"],
+        ["SSH", "tmux", "rsync", "docker compose", "stdout/stderr", "exit status", "timeout", "日志路径"],
+        "cinderx-remote-lab-ops",
+    )
+    require_all(
+        skill_texts["cinderx-ab-run-slot"],
+        ["baseline", "candidate", "CPU affinity", "绑核", "结果目录", "不重叠", "并行"],
+        "cinderx-ab-run-slot",
+    )
+    require_all(
+        skill_texts["cpython-runtime-test-run"],
+        ["CPython Runtime", "CinderX correctness", "L1 smoke", "L3", "L4", "近千条", "单元测试", "功能测试"],
+        "cpython-runtime-test-run",
+    )
+    require_all(
+        skill_texts["cinderx-smoke-check"],
+        ["import cinderx", "is_initialized", "get_import_error", "最小 JIT", "HIR", "_cinderx"],
+        "cinderx-smoke-check",
+    )
+    require_all(
+        skill_texts["pyperformance-worker-run"],
+        ["run_benchmark.py", "--worker", "bench_command", "sitecustomize", "LD_LIBRARY_PATH", "PYTHONPATH", "真实 worker"],
+        "pyperformance-worker-run",
+    )
+    require_all(
+        skill_texts["pyperformance-suite-run"],
+        ["python -m pyperformance run", "warmup", "loops", "run.json", "subset", "full", "正式"],
+        "pyperformance-suite-run",
+    )
+    require_all(
+        skill_texts["pyperformance-result-compare"],
+        ["run.json", "speedup.json", "baseline", "candidate", "方差", "噪声", "收益范围", "提交 baseline"],
+        "pyperformance-result-compare",
+    )
+    require_all(
+        skill_texts["cinderx-gdb-core-triage"],
+        ["SIGSEGV", "exit 139", "core dump", "gdb", "bt full", "info registers", "同一真实命令", "日志不能替代"],
+        "cinderx-gdb-core-triage",
+    )
+    require_all(
+        skill_texts["cinderx-hir-dump"],
+        ["PYTHONJITDUMPFINALHIR", "PYTHONJITLOGFILE", "真实 worker", "HIR dump", "jit.log", "不另造"],
+        "cinderx-hir-dump",
+    )
+    require_all(
+        skill_texts["cinderx-jit-entry-check"],
+        ["benchmark 本体", "CinderX JIT", "启动期", "第三方包", "compile storm", "jit.log"],
+        "cinderx-jit-entry-check",
+    )
+    require_all(
+        skill_texts["cinderx-hir-lir-analyze"],
+        ["HIR", "LIR", "uop", "机器码", "deopt", "frame layout", "调用约定", "修改方案"],
+        "cinderx-hir-lir-analyze",
+    )
+    require_all(
+        skill_texts["cinderx-isa-microarch-compare"],
+        ["Kunpeng", "x86", "ISA", "cache", "分支预测", "SIMD", "barrier", "hugepages", "perf"],
+        "cinderx-isa-microarch-compare",
+    )
+    require_all(
+        skill_texts["cinderx-optimization-report"],
+        ["背景", "复现命令", "环境指纹", "证据链", "根因", "patch", "回归结果"],
+        "cinderx-optimization-report",
+    )
+
+    workflow_expectations = {
+        "lab": ["cinderx-environment-verifier", "cinderx-env-validate", "cinderx-env-bootstrap", "cinderx-smoke-check"],
+        "crash": ["cinderx-crash-triager", "cinderx-gdb-core-triage", "cinderx-hir-dump", "pyperformance-worker-run"],
+        "regression": ["cinderx-environment-verifier", "pyperformance-baseline-runner", "pyperformance-candidate-runner", "pyperformance-benchmark-analyst"],
+        "jit": ["cinderx-jit-analyst", "cinderx-jit-entry-check", "cinderx-hir-lir-analyze", "cinderx-hir-dump"],
+        "cross_platform": ["cinderx-environment-verifier", "pyperformance-baseline-runner", "pyperformance-candidate-runner", "cinderx-platform-analyst"],
+        "feature": ["cinderx-environment-verifier", "cinderx-jit-analyst", "cpython-runtime-test-run", "pyperformance-result-compare"],
+        "platform": ["cinderx-platform-analyst", "cinderx-isa-microarch-compare", "cinderx-jit-analyst", "pyperformance-result-compare"],
+    }
+    for workflow_name, needles in workflow_expectations.items():
+        require_all(workflows[workflow_name], needles, f"{workflow_name} workflow")
+
+    require_all(
+        scenarios,
+        [
+            "cinderx-env-validate",
+            "cinderx-env-clean",
+            "cinderx-env-bootstrap",
+            "cinderx-ab-run-slot",
+            "pyperformance-worker-run",
+            "cinderx-gdb-core-triage",
+            "cinderx-isa-microarch-compare",
+        ],
+        "pressure scenarios",
+    )
+    require_all(
+        review,
+        ["专业 skill", "Agent 层", "cinderx-env-validate", "cinderx-ab-run-slot", "cinderx-gdb-core-triage"],
+        "dynamic pressure review",
+    )
 
     print("pressure scenario validation passed")
     return 0

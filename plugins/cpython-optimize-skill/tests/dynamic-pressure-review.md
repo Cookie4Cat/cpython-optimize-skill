@@ -18,6 +18,14 @@
 10. 单元/功能/性能测试中出现 SIGSEGV 后反复加日志
 11. 远程命令无输出导致重复执行同一条命令
 12. 远程网络操作异常耗时却无限等待
+13. 根据双平台性能差距定位根因和优化点
+14. 根据已知特性实施优化并补充用例
+15. 系统分析 ISA / 微架构差异寻找优化机会
+16. 顶层端到端优化任务不应误入单用例 JIT 或正式跑分子流程
+17. 长任务或上下文压缩后，运行中 Bash 输出出现 crash/timeout 仍应触发 skill 提醒
+18. 环境 verifier 三态：可复用、新环境、被破坏环境
+19. A/B 并行跑分：baseline/candidate 分 slot 和绑核
+20. 技能必须保持 CPython/CinderX 专业动作，不退回泛化入口
 
 ## 当前结论
 
@@ -40,6 +48,17 @@
 - crash 取证改为 gdb/core/HIR 优先，日志只能补充，不能替代 native 证据
 - 远程命令首跑必须有输出契约，避免无输出后重复执行有副作用命令
 - 远程网络卡顿要先诊断 timeout、代理、DNS、镜像源，并在需要决策时询问用户
+- 新增验证阶梯：L0 静态审计、L1 最小功能验证、L2 单 benchmark、L3 小集合、L4 全量验证
+- 新增成本预算约束，防止调试循环默认进入近千条 Runtime 或近三小时 pyperformance 全量
+- 新增三条优化 workflow：双平台差距、已知特性驱动、平台差异系统发现
+- Workflow 分为主 Workflow 和 Supporting Workflow
+- 顶层任务先选用户目标入口，再按阶段调用 supporting workflow
+- 明确先主流程，后子流程，避免用单用例 JIT 分析或正式跑分流程取代端到端优化流程
+- 移除启动时全量注入，改为 PostToolUse runtime hook 捕获 crash、timeout、远程无输出等运行中信号
+- runtime hook 只注入短提醒，引导加载 `workflow-cinderx-crash-triage`、`cinderx-gdb-core-triage`、`cinderx-remote-lab-ops` 和 `validation-strategy`
+- 新增 Agent 层：orchestrator 只做分发，environment verifier 做三态判断，runner/analyst/triager 接管阶段
+- 新原子层收窄为专业 skill：`cinderx-env-validate`、`cinderx-ab-run-slot`、`cinderx-gdb-core-triage`、`pyperformance-worker-run`、`cinderx-isa-microarch-compare`
+- 删除泛化入口，避免把任意项目都能套用的 skill 放进 CPython/CinderX 专业仓
 
 ## 结论
 
@@ -49,3 +68,5 @@
 - 对 `bench_command()` 类 benchmark 的专门 FAQ
 - 对“容器里有代理 / 没代理”这种环境前置条件的显式提醒
 - 把远程输出契约沉淀成可复用包装脚本
+- 后续可把验证阶梯实现成 CinderX 专用 runner，自动生成命令、产物目录和晋级记录
+- 后续可按真实误报情况继续收敛 runtime hook 的触发模式

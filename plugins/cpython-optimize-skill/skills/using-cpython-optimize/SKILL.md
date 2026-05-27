@@ -1,112 +1,60 @@
 ---
 name: using-cpython-optimize
-description: Use when 开始任何 CPython/CinderX 性能优化任务时自动注入，建立工作流发现和技能选择规则
+description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分、pyperformance、Runtime 测试、crash、JIT 或 Kunpeng/x86 平台差异任务。
 ---
 
-# CPython/CinderX 优化技能引导
+# CPython/CinderX Optimize Router
 
-本仓库提供 CPython/CinderX 性能优化的系统化工作流。
+薄 router：Orchestrator 选 Workflow，Workflow 分派 Agent，Agent 调专业 Skill。
 
-## 核心原则
+## 层级
 
-- 远程环境默认进入 Docker 容器隔离，不直接在裸机上工作
-- 先做项目隔离（宿主机独立目录），再做环境隔离（Docker 容器）
-- 构建前先做 API/ABI 版本门禁，以目标解释器和容器内头文件为事实源
-- `SIGSEGV` / `exit 139` / core dump 先走 `gdb`、core 和 HIR 证据链，不用反复加日志替代 crash triage
-- 远程命令第一次执行就要有输出契约：stdout/stderr、exit status、日志路径或 tmux pane
-- 远程异常耗时要区分正常编译和网络卡顿；无进度时先诊断，必要时询问用户
-- 先拿可复现证据，再下根因结论
-- 用结构化产物沉淀实验结果，避免只留口头结论
+| 层 | 职责 |
+|----|------|
+| Orchestrator | 运行时主 Agent，理解目标、选 Workflow、分派 Agent、合并结果 |
+| Workflow | 端到端剧本和 gate |
+| Agent | 阶段负责人，接管环境、跑分、crash、JIT 或平台分析 |
+| Skill | CPython/CinderX 专业动作 |
 
-## 技能清单
+## Agent 路由
 
-| 技能名 | 触发条件 |
-|--------|---------|
-| `remote-environment` | 需要连接远程服务器、配置 SSH、创建独立目录 |
-| `cpython-build` | 需要编译 CPython 或 CinderX、强制覆盖安装 |
-| `docker-runtime` | 需要创建/管理 Docker 容器、挂载目录、镜像复用 |
-| `pyperformance-test` | 需要跑 pyperformance benchmark、对比性能数据 |
-| `cinderx-analysis` | 需要分析 JIT/非JIT 用例、dump HIR/LIR、定位性能瓶颈 |
-| `experiment-documentation` | 需要记录实验结果、写报告、规范产物格式 |
-| `design-documentation` | 需要编写系统设计、架构设计、功能设计或详细设计文档 |
+| Agent | 触发 |
+|-------|------|
+| `cinderx-orchestrator` | 任意入口和任务分发 |
+| `cinderx-environment-verifier` / environment-verifier | 环境审计、三态判断 |
+| `pyperformance-baseline-runner` / baseline-runner | baseline slot 跑分 |
+| `pyperformance-candidate-runner` / candidate-runner | candidate slot 跑分 |
+| `pyperformance-benchmark-analyst` | `run.json` / `speedup.json` 结果解读 |
+| `cinderx-crash-triager` / crash-triager | `SIGSEGV`、`exit 139`、core dump |
+| `cinderx-jit-analyst` | CinderX JIT、HIR/LIR、机器码优化点 |
+| `cinderx-platform-analyst` | Kunpeng/x86、ISA、微架构差异 |
 
-## Workflow 清单
+## Environment Verifier 三态
 
-Workflow 是多个技能和专门 Agent 的编排入口。优先根据用户目标选择 workflow；只有任务很窄时才直接调用单个原子技能。
+| 状态 | 下一步 |
+|------|--------|
+| 可复用 / `reusable` | 返回环境句柄 |
+| 新环境 / `needs_bootstrap` | 调 `cinderx-env-bootstrap` |
+| 被破坏 / `needs_clean_bootstrap` | 调 `cinderx-env-clean` 再 bootstrap |
 
-| Workflow | 触发条件 | 串联技能 |
-|----------|----------|----------|
-| `workflow-remote-cinderx-lab-setup` | 从零准备远程 CinderX/CPython 优化实验环境 | `remote-environment` → `docker-runtime` → `cpython-build` → `pyperformance-test` |
-| `workflow-cinderx-crash-triage` | 复现、定位、记录 CinderX 或 pyperformance crash | `remote-environment` → `docker-runtime` → `cpython-build` → `pyperformance-test` → `cinderx-analysis` → `experiment-documentation` |
-| `workflow-pyperformance-regression` | 正式 benchmark、性能回归、CPython/CinderX 对比 | `docker-runtime` → `cpython-build` → `pyperformance-test` → `cinderx-analysis` → `experiment-documentation` |
-| `workflow-jit-optimization-analysis` | 单用例 JIT 热点、HIR/LIR、优化点分析 | `pyperformance-test` → `cinderx-analysis` → `experiment-documentation` |
+## 专业 Skill
 
-## 执行顺序
-
-```dot
-digraph workflow {
-    "开始优化任务" [shape=box];
-    "remote-environment" [shape=box];
-    "docker-runtime" [shape=box];
-    "cpython-build" [shape=box];
-    "pyperformance-test" [shape=box];
-    "cinderx-analysis" [shape=box];
-    "experiment-documentation" [shape=box];
-
-    "开始优化任务" -> "remote-environment";
-    "remote-environment" -> "docker-runtime";
-    "docker-runtime" -> "cpython-build";
-    "cpython-build" -> "pyperformance-test";
-    "pyperformance-test" -> "cinderx-analysis";
-    "cinderx-analysis" -> "experiment-documentation";
-}
-```
-
-按需进入，不是每步都必须。用户已有环境时跳过对应步骤。
-
-## Docker 线选择
-
-| 目标 | 选择 |
-|------|------|
-| 验证 benchmark / 抓 HIR / JIT log / crash | `cinderx-test` |
-| stock CPython vs CinderX 正式对照 | `cpython-baseline` |
-| Docker 与真实环境差异复核 | 回宿主机 |
-
-## 性能口径
-
-正式对比前先明确口径，不要混用：
-
-| 口径 | 说明 |
-|------|------|
-| `CPython 解释执行` | stock baseline |
-| `CPython JIT` | stock JIT 收益 |
-| `CinderX 解释执行` | CinderX 不启 JIT |
-| `CinderX JIT` | CinderX 最终加速 |
-
-## baseline 的两种含义
-
-写报告时必须说明 `baseline` 指的是什么：
-- **口径基线**：比较 CinderX 和原生 CPython
-- **提交基线**：比较改动前后提交
-
-## 快速路由
-
-- 只看功能不看性能 → `cinderx-test` + 单 `run_benchmark.py` + 开 HIR dump
-- 复现 crash → 单 `run_benchmark.py --worker` + `jit.log` / HIR
-- 测试出现 `SIGSEGV` → 保留真实命令 + `gdb bt full` / core dump + 必要 HIR
-- 编译报 CPython API 不存在 → 先核对目标解释器、`SOABI`、头文件版本，再决定兼容实现
-- 远程命令无输出 → 查 exit status、日志、tmux pane 和进程，不盲目重复执行
-- 远程网络/下载异常耗时 → 加 timeout、测镜像/代理/DNS，无法判断时询问用户
-- 正式 benchmark → 先关 HIR dump，用 `python -m pyperformance run`
-- 修掉 crash / 找到根因 → 必须写文档（调用 `experiment-documentation`）
+`cinderx-env-validate`、`cinderx-env-clean`、`cinderx-env-bootstrap`、`cinderx-remote-lab-ops`、`cinderx-ab-run-slot`、`cpython-runtime-test-run`、`cinderx-smoke-check`、`pyperformance-worker-run`、`pyperformance-suite-run`、`pyperformance-result-compare`、`cinderx-gdb-core-triage`、`cinderx-hir-dump`、`cinderx-jit-entry-check`、`cinderx-hir-lir-analyze`、`cinderx-isa-microarch-compare`、`cinderx-optimization-report`、`validation-strategy`。
 
 ## Workflow 路由
 
-| 用户意图 | 优先调用 |
-|----------|----------|
-| "帮我搭一个远程实验环境" | `workflow-remote-cinderx-lab-setup` |
-| "某个 benchmark 崩了 / SIGSEGV / core dump" | `workflow-cinderx-crash-triage` |
-| "对比性能 / 看回归 / 跑正式 pyperformance" | `workflow-pyperformance-regression` |
-| "分析某个 JIT 用例为什么慢 / 找优化点" | `workflow-jit-optimization-analysis` |
+- 双平台性能差距：`workflow-cross-platform-delta-triage`
+- 已知特性优化：`workflow-feature-driven-optimization`
+- 系统找平台优化点：`workflow-platform-differential-discovery`
+- 环境准备：`workflow-remote-cinderx-lab-setup`
+- crash：`workflow-cinderx-crash-triage`
+- 正式回归：`workflow-pyperformance-regression`
+- 单 benchmark JIT：`workflow-jit-optimization-analysis`
 
-Workflow 内部必须执行 gate：先记录可复现环境，再采集证据，最后下结论并沉淀文档。不要绕过 gate 直接给根因判断。
+## 不变原则
+
+- 先让 `cinderx-environment-verifier` 审计环境，再跑昂贵任务。
+- A/B 并行前用 `cinderx-ab-run-slot` 确认 CPU 绑核和结果目录不冲突。
+- `SIGSEGV` / core dump 走 `cinderx-gdb-core-triage`，日志不能替代 `gdb bt full`。
+- 远程命令输出契约用 `cinderx-remote-lab-ops`，异常耗时要诊断并询问用户。
+- 验证阶梯和成本预算用 `validation-strategy`。

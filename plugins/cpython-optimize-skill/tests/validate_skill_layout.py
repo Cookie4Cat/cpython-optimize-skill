@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -10,6 +11,65 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = ROOT / "skills"
 AGENTS_DIR = ROOT / "agents"
+
+REQUIRED_SKILLS = {
+    "using-cpython-optimize",
+    "cinderx-env-validate",
+    "cinderx-env-clean",
+    "cinderx-env-bootstrap",
+    "cinderx-remote-lab-ops",
+    "cinderx-ab-run-slot",
+    "cpython-runtime-test-run",
+    "cinderx-smoke-check",
+    "pyperformance-worker-run",
+    "pyperformance-suite-run",
+    "pyperformance-result-compare",
+    "cinderx-gdb-core-triage",
+    "cinderx-hir-dump",
+    "cinderx-jit-entry-check",
+    "cinderx-hir-lir-analyze",
+    "cinderx-isa-microarch-compare",
+    "cinderx-optimization-report",
+    "validation-strategy",
+    "design-documentation",
+    "workflow-remote-cinderx-lab-setup",
+    "workflow-cinderx-crash-triage",
+    "workflow-pyperformance-regression",
+    "workflow-jit-optimization-analysis",
+    "workflow-cross-platform-delta-triage",
+    "workflow-feature-driven-optimization",
+    "workflow-platform-differential-discovery",
+}
+
+REMOVED_SKILLS = {
+    "remote-environment",
+    "remote-workspace",
+    "command-observability",
+    "docker-runtime",
+    "docker-lab-runtime",
+    "cpython-build",
+    "cpython-build-install",
+    "test-execution",
+    "pyperformance-test",
+    "pyperformance-benchmark",
+    "benchmark-result-analysis",
+    "native-crash-debugging",
+    "cinderx-analysis",
+    "cinderx-jit-analysis",
+    "platform-differential-analysis",
+    "experiment-documentation",
+}
+
+REQUIRED_AGENTS = {
+    "cinderx-orchestrator.md",
+    "cinderx-environment-verifier.md",
+    "pyperformance-baseline-runner.md",
+    "pyperformance-candidate-runner.md",
+    "pyperformance-benchmark-analyst.md",
+    "cinderx-crash-triager.md",
+    "cinderx-jit-analyst.md",
+    "cinderx-platform-analyst.md",
+}
 
 # 期望的顶层结构：目录/文件名 -> 类型（dir/file）
 TOP_LEVEL_LAYOUT = {
@@ -26,7 +86,7 @@ TOP_LEVEL_LAYOUT = {
 # hooks/ 内结构
 HOOKS_LAYOUT = {
     "hooks.json": "file",
-    "session-start": "file",
+    "runtime-skill-router": "file",
 }
 
 # plugin.json 内必须包含的 key
@@ -95,8 +155,13 @@ def validate_agent_docs() -> None:
     if not agent_docs:
         raise AssertionError("agents/ 下没有 Agent 文档")
 
+    agent_names = {path.name for path in agent_docs}
+    missing = REQUIRED_AGENTS - agent_names
+    if missing:
+        raise AssertionError(f"agents/ 缺少 CPython/CinderX 专业 Agent: {sorted(missing)}")
+
     forbidden = ["## Focus", "## Use When", "## Output", "Return:", "Do not "]
-    required = ["## 职责", "## 适用场景", "## 输出要求"]
+    required = ["## 职责", "## 适用场景", "## 可调用技能", "## 输出要求"]
     for path in agent_docs:
         text = read_text(path)
         for needle in required:
@@ -107,12 +172,52 @@ def validate_agent_docs() -> None:
                 raise AssertionError(f"{path.relative_to(ROOT)} 仍包含英文模板: {needle}")
 
 
+def validate_hooks() -> None:
+    hooks_dir = ROOT / "hooks"
+    hooks_json = read_text(hooks_dir / "hooks.json")
+    router = hooks_dir / "runtime-skill-router"
+    router_text = read_text(router)
+
+    if (hooks_dir / "session-start").exists():
+        raise AssertionError("hooks/session-start 已废弃，不能继续全量注入入口技能")
+
+    for needle in [
+        "PostToolUse",
+        "Bash",
+        "runtime-skill-router",
+    ]:
+        if needle not in hooks_json:
+            raise AssertionError(f"hooks.json 缺少运行中路由信号: {needle}")
+
+    if "SessionStart" in hooks_json:
+        raise AssertionError("hooks.json 不应再使用 SessionStart 全量注入")
+
+    for needle in [
+        "SIGSEGV",
+        "Segmentation fault",
+        "exit 139",
+        "core dump",
+        "additionalContext",
+        "workflow-cinderx-crash-triage",
+        "cinderx-gdb-core-triage",
+        "gdb bt full",
+        "validation-strategy",
+        "cinderx-remote-lab-ops",
+    ]:
+        if needle not in router_text:
+            raise AssertionError(f"runtime-skill-router 缺少关键信号: {needle}")
+
+    if not os.access(router, os.X_OK):
+        raise AssertionError("runtime-skill-router 需要可执行权限")
+
+
 def main() -> int:
     # 1. 顶层目录结构
     validate_directory_layout(ROOT, TOP_LEVEL_LAYOUT, "")
 
     # 2. hooks 结构
     validate_directory_layout(ROOT / "hooks", HOOKS_LAYOUT, "hooks/ ")
+    validate_hooks()
 
     # 3. plugin.json 字段
     validate_plugin_json(ROOT / ".claude-plugin" / "plugin.json")
@@ -125,6 +230,15 @@ def main() -> int:
     skill_dirs = [p for p in SKILLS_DIR.iterdir() if p.is_dir()]
     if not skill_dirs:
         raise AssertionError("skills/ 下没有子技能")
+
+    skill_names = {p.name for p in skill_dirs}
+    missing = REQUIRED_SKILLS - skill_names
+    if missing:
+        raise AssertionError(f"skills/ 缺少新原子层或 workflow: {sorted(missing)}")
+
+    removed = REMOVED_SKILLS & skill_names
+    if removed:
+        raise AssertionError(f"skills/ 仍保留旧原子 skill 边界: {sorted(removed)}")
 
     for skill_dir in skill_dirs:
         validate_skill_dir(skill_dir)
