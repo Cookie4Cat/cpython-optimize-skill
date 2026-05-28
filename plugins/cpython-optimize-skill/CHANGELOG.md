@@ -2,6 +2,19 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.8.4
+
+- 新增 `PreToolUse` validation hook，在 CPython/CinderX 源码仓执行构建、Runtime、pyperformance 或本地安装命令前按命令内容路由技能
+- 宽匹配 `pip install [options] .` / `python -m pip install [options] .` / `uv pip install [options] .`，将本地 editable/source install 归入环境审计路径
+- 对全量 pyperformance、全量 Runtime 和会改写环境的本地 pip install 使用 `permissionDecision: deny`，要求先完成环境审计、验证等级和用例范围确认
+- 增加 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 确认前缀，避免技能确认后重复阻断同一类命令
+
+## v0.8.3
+
+- 固定环境校验目标为 Python 3.14.3，移除 active skill / agent / workflow 中对更高具体 patchlevel 的引用
+- 将 API/ABI 防误用场景改写为“更高 patchlevel API”，避免 Agent 把错误 patchlevel 当成期望版本
+- 增加校验，禁止 active 文档重新出现错误的 Python patchlevel
+
 ## v0.8.2
 
 - 收窄运行中 hook 的匹配范围：只扫描真实工具响应里的 stdout/stderr/output，不再扫描整段 hook payload
@@ -32,7 +45,7 @@
 
 ## v0.7.1
 
-- 增加 CPython/CinderX 编译前 API/ABI 版本门禁，防止目标容器为 Python 3.14.3 时误用 Python 3.14.5 API
+- 增加 CPython/CinderX 编译前 API/ABI 版本门禁，防止目标容器为 Python 3.14.3 时误用更高 patchlevel API
 - 强化 `SIGSEGV` / `exit 139` crash triage：优先 `gdb bt full`、core dump、HIR/JIT 证据，禁止用反复加日志替代 native 取证
 - 增加远程命令输出契约：首次执行必须保留 stdout/stderr、exit status、日志路径或 tmux pane
 - 增加远程异常耗时处理：网络卡顿需使用 timeout、镜像/代理/DNS 诊断，并在需要决策时询问用户

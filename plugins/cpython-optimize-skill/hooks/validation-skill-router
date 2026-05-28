@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+"""PreToolUse router for CPython/CinderX validation commands."""
+
+from __future__ import annotations
+
+import json
+import os
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+
+ACK_ENV = "CPYTHON_OPTIMIZE_HOOK_ACK"
+
+
+def load_payload() -> dict:
+    try:
+        data = json.load(sys.stdin)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def tool_input(payload: dict) -> dict:
+    value = payload.get("tool_input")
+    return value if isinstance(value, dict) else {}
+
+
+def extract_command(payload: dict) -> str:
+    input_data = tool_input(payload)
+    command = input_data.get("command") or input_data.get("cmd")
+    if not command:
+        command = payload.get("command") or payload.get("cmd")
+    return command if isinstance(command, str) else ""
+
+
+def extract_cwd(payload: dict) -> Path:
+    input_data = tool_input(payload)
+    for key in ("cwd", "workdir", "working_dir"):
+        value = input_data.get(key) or payload.get(key)
+        if isinstance(value, str) and value:
+            return Path(value).expanduser()
+    return Path.cwd()
+
+
+def emit_context(message: str) -> None:
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "additionalContext": message,
+                }
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+def emit_deny(reason: str) -> None:
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": reason,
+                }
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+def shell_tokens(command: str) -> list[str]:
+    try:
+        return shlex.split(command, posix=True)
+    except ValueError:
+        return []
+
+
+def has_ack(tokens: list[str]) -> bool:
+    if os.environ.get(ACK_ENV) == "1":
+        return True
+    return any(token == f"{ACK_ENV}=1" for token in tokens)
+
+
+def trim_wrappers(tokens: list[str]) -> list[str]:
+    tokens = list(tokens)
+    while tokens and "=" in tokens[0] and not tokens[0].startswith("-"):
+        tokens.pop(0)
+    if tokens[:1] == ["env"]:
+        tokens = tokens[1:]
+        while tokens and "=" in tokens[0] and not tokens[0].startswith("-"):
+            tokens.pop(0)
+    if tokens[:1] == ["time"]:
+        tokens = tokens[1:]
+    if tokens[:1] == ["timeout"] and len(tokens) >= 3:
+        tokens = tokens[2:]
+    return tokens
+
+
+def command_chunks(tokens: list[str]) -> list[list[str]]:
+    chunks: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if token in {";", "&&", "||", "|"}:
+            if current:
+                chunks.append(trim_wrappers(current))
+                current = []
+            continue
+        current.append(token)
+    if current:
+        chunks.append(trim_wrappers(current))
+    return [chunk for chunk in chunks if chunk]
+
+
+def is_python_executable(token: str) -> bool:
+    name = Path(token).name
+    return name == "python" or name.startswith("python3") or name in {"python.exe", "python3.exe"}
+
+
+def is_pip_executable(token: str) -> bool:
+    name = Path(token).name
+    return name == "pip" or name.startswith("pip3") or name in {"pip.exe", "pip3.exe"}
+
+
+def starts_pip_install(tokens: list[str]) -> tuple[bool, int]:
+    if len(tokens) >= 2 and is_pip_executable(tokens[0]) and tokens[1] == "install":
+        return True, 2
+    if len(tokens) >= 4 and is_python_executable(tokens[0]) and tokens[1:4] == ["-m", "pip", "install"]:
+        return True, 4
+    if len(tokens) >= 3 and Path(tokens[0]).name == "uv" and tokens[1:3] == ["pip", "install"]:
+        return True, 3
+    return False, 0
+
+
+def has_local_project_install_arg(args: list[str]) -> bool:
+    index = 0
+    while index < len(args):
+        token = args[index]
+        next_token = args[index + 1] if index + 1 < len(args) else ""
+        if token == ".":
+            return True
+        if token in {"-e", "--editable"} and next_token == ".":
+            return True
+        if token in {"--config-settings", "-C"}:
+            index += 2
+            continue
+        if token.startswith("--editable=.") or token.startswith("-e."):
+            return True
+        index += 1
+    return False
+
+
+def is_pip_install_local_project(tokens: list[str]) -> bool:
+    ok, arg_start = starts_pip_install(tokens)
+    return ok and has_local_project_install_arg(tokens[arg_start:])
+
+
+def starts_pyperformance_run(tokens: list[str]) -> tuple[bool, int]:
+    if len(tokens) >= 2 and Path(tokens[0]).name == "pyperformance" and tokens[1] == "run":
+        return True, 2
+    if len(tokens) >= 4 and is_python_executable(tokens[0]) and tokens[1:4] == ["-m", "pyperformance", "run"]:
+        return True, 4
+    return False, 0
+
+
+def has_benchmark_subset(args: list[str]) -> bool:
+    for index, token in enumerate(args):
+        if token.startswith("--benchmarks=") or token.startswith("-b="):
+            return True
+        if token in {"--benchmarks", "-b"} and index + 1 < len(args):
+            return True
+    return False
+
+
+def is_runtime_test(tokens: list[str]) -> tuple[bool, bool]:
+    if len(tokens) >= 4 and is_python_executable(tokens[0]) and tokens[1:3] == ["-m", "test"]:
+        args = tokens[3:]
+    elif len(tokens) >= 3 and Path(tokens[0]).name == "python" and tokens[1:3] == ["-m", "test"]:
+        args = tokens[3:]
+    elif tokens[:2] == ["make", "test"] or tokens[:1] == ["pytest"]:
+        return True, False
+    else:
+        return False, False
+
+    positional = [arg for arg in args if not arg.startswith("-")]
+    has_named_tests = any(arg.startswith(("test_", "Lib/test/", "cinderx")) for arg in positional)
+    return True, not has_named_tests
+
+
+def is_build_or_test(tokens: list[str]) -> bool:
+    if not tokens:
+        return False
+    command = Path(tokens[0]).name
+    if command in {"pytest", "ctest", "ninja"}:
+        return True
+    if command == "make":
+        return True
+    if command == "cmake" and "--build" in tokens:
+        return True
+    return False
+
+
+def classify_command(command: str) -> tuple[str, str]:
+    tokens = shell_tokens(command)
+    if not tokens or has_ack(tokens):
+        return "ignore", ""
+
+    for chunk in command_chunks(tokens):
+        if is_pip_install_local_project(chunk):
+            return "deny", "pip install local project"
+
+        is_perf, arg_start = starts_pyperformance_run(chunk)
+        if is_perf:
+            if has_benchmark_subset(chunk[arg_start:]):
+                return "context", "targeted pyperformance"
+            return "deny", "full pyperformance"
+
+        runtime, full_suite = is_runtime_test(chunk)
+        if runtime:
+            return ("deny", "full runtime tests") if full_suite else ("context", "targeted runtime tests")
+
+        if is_build_or_test(chunk):
+            return "context", "build/test command"
+
+    return "ignore", ""
+
+
+def git_root(cwd: Path) -> Path | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=2,
+        )
+    except Exception:
+        return None
+    root = result.stdout.strip()
+    return Path(root) if root else None
+
+
+def marker_root(cwd: Path) -> Path | None:
+    current = cwd if cwd.is_dir() else cwd.parent
+    for parent in [current, *current.parents]:
+        if is_cpython_cinderx_root(parent):
+            return parent
+    return None
+
+
+def is_cpython_cinderx_root(path: Path) -> bool:
+    return (
+        (path / "Include" / "patchlevel.h").is_file()
+        and (path / "Python").is_dir()
+        and (path / "Objects").is_dir()
+        and (path / "Lib").is_dir()
+    )
+
+
+def in_cpython_cinderx_repo(cwd: Path) -> bool:
+    root = git_root(cwd) or marker_root(cwd)
+    return bool(root and is_cpython_cinderx_root(root))
+
+
+def main() -> int:
+    payload = load_payload()
+    command = extract_command(payload)
+    if not command:
+        return 0
+
+    action, reason = classify_command(command)
+    if action == "ignore":
+        return 0
+
+    if not in_cpython_cinderx_repo(extract_cwd(payload)):
+        return 0
+
+    if action == "deny":
+        emit_deny(
+            "检测到 CPython/CinderX 高成本或会改写环境的验证命令"
+            f"（{reason}）。请先加载 using-cpython-optimize、validation-strategy"
+            "，必要时加载 cinderx-env-validate / cinderx-env-bootstrap / cinderx-remote-lab-ops；"
+            "确认 Python 3.14.3 环境、验证等级、用例范围和输出路径后再执行。"
+            f"若已经完成这些检查，请以 {ACK_ENV}=1 前缀重试原命令。"
+        )
+        return 0
+
+    emit_context(
+        "检测到 CPython/CinderX 验证/构建命令"
+        f"（{reason}）。请确保已加载 using-cpython-optimize 和 validation-strategy；"
+        "在运行前确认 Python 3.14.3 环境、测试范围、stdout/stderr 记录方式和失败后的 gdb/HIR 证据路径。"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

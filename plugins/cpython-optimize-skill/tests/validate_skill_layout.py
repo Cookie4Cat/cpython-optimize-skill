@@ -87,6 +87,7 @@ TOP_LEVEL_LAYOUT = {
 HOOKS_LAYOUT = {
     "hooks.json": "file",
     "runtime-skill-router": "file",
+    "validation-skill-router": "file",
 }
 
 # plugin.json 内必须包含的 key
@@ -176,15 +177,19 @@ def validate_hooks() -> None:
     hooks_dir = ROOT / "hooks"
     hooks_json = read_text(hooks_dir / "hooks.json")
     router = hooks_dir / "runtime-skill-router"
+    validation_router = hooks_dir / "validation-skill-router"
     router_text = read_text(router)
+    validation_router_text = read_text(validation_router)
 
     if (hooks_dir / "session-start").exists():
         raise AssertionError("hooks/session-start 已废弃，不能继续全量注入入口技能")
 
     for needle in [
+        "PreToolUse",
         "PostToolUse",
         "Bash",
         "runtime-skill-router",
+        "validation-skill-router",
     ]:
         if needle not in hooks_json:
             raise AssertionError(f"hooks.json 缺少运行中路由信号: {needle}")
@@ -212,6 +217,25 @@ def validate_hooks() -> None:
 
     if not os.access(router, os.X_OK):
         raise AssertionError("runtime-skill-router 需要可执行权限")
+
+    for needle in [
+        "PreToolUse",
+        "permissionDecision",
+        "additionalContext",
+        "CPYTHON_OPTIMIZE_HOOK_ACK",
+        "using-cpython-optimize",
+        "validation-strategy",
+        "cinderx-env-validate",
+        "pyperformance",
+        "pip install",
+        "Include",
+        "patchlevel.h",
+    ]:
+        if needle not in validation_router_text:
+            raise AssertionError(f"validation-skill-router 缺少关键信号: {needle}")
+
+    if not os.access(validation_router, os.X_OK):
+        raise AssertionError("validation-skill-router 需要可执行权限")
 
 
 def main() -> int:

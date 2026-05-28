@@ -163,12 +163,12 @@
 
 用户话术示例：
 
-> 容器里是 Python 3.14.3，但编译失败时 Agent 选了 Python 3.14.5 才有的 API。
+> 容器里是 Python 3.14.3，但编译失败时 Agent 选了更高 patchlevel 才有的 API。
 
 期望行为：
 - 先以目标解释器和容器内头文件为版本事实源
 - 记录 `sys.version`、`SOABI`、`patchlevel.h` 或等价证据
-- 不引用 3.14.5 才有的 API 来修 3.14.3 环境的编译问题
+- 不引用目标环境没有的 API 来修 3.14.3 环境的编译问题
 - API/ABI 不一致时先停下来修环境或改兼容实现
 
 ## 场景 16：测试中出现段错误
@@ -396,3 +396,16 @@
 - `git show`、`git log -p`、`git diff` 等历史/差异查看即使输出旧文档里的 `SIGSEGV`、`exit 139`、`core dump`，也不触发 crash triage 提醒
 - `rg`、`sed`、`cat` 等只读文本查看命令输出 hook 文档或压力场景里的触发词时，也不触发运行态护栏
 - 真正执行 Runtime 测试、pyperformance、pip/git 下载或远端命令时，stdout/stderr 出现 crash、timeout 或长时间无输出仍然触发对应提醒
+
+## 场景 35：验证命令执行前应按命令内容触发技能
+
+用户话术示例：
+
+> 我没显式调用 skill，刚改完 CinderX 代码，准备跑 `python -m pyperformance run` 或 `pip install --no-build-isolation -e .`。
+
+期望行为：
+- `PreToolUse` 的 `validation-skill-router` 挂在 `Bash` 上，但脚本内部按命令内容做低成本过滤
+- 只在 CPython/CinderX 源码仓中匹配构建、Runtime、pyperformance 和本地 `pip install [options] .`
+- 定向 Runtime / subset pyperformance 注入 `using-cpython-optimize` 和 `validation-strategy` 的 `additionalContext`，本次命令继续执行
+- 全量 pyperformance、全量 Runtime 或会改写环境的本地 pip install 先 `permissionDecision: deny`，要求完成环境审计、验证等级和范围确认
+- 已确认检查后可用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 前缀重试，避免重复阻断

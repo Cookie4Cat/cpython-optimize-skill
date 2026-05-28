@@ -14,7 +14,7 @@
 6. 性能退化分析
 7. Docker 内连续调试，不想反复 `docker exec`
 8. Docker 里既提 crash 又要正式对照
-9. 容器 Python 3.14.3 却误用 Python 3.14.5 API
+9. 容器 Python 3.14.3 却误用更高 patchlevel API
 10. 单元/功能/性能测试中出现 SIGSEGV 后反复加日志
 11. 远程命令无输出导致重复执行同一条命令
 12. 远程网络操作异常耗时却无限等待
@@ -26,6 +26,7 @@
 18. 环境 verifier 三态：可复用、新环境、被破坏环境
 19. A/B 并行跑分：baseline/candidate 分 slot 和绑核
 20. 技能必须保持 CPython/CinderX 专业动作，不退回泛化入口
+21. 写完 CPython/CinderX 代码后，验证/本地安装命令应在执行前按命令内容触发技能
 
 ## 当前结论
 
@@ -44,7 +45,7 @@
 - 当用户同时提到 crash 和正式对照时，要先判断“当前目标”，避免只盯着历史 crash 线走偏
 - SSH 进入远程环境后，默认下一步不是裸机主工作流，而是先确认宿主机目录隔离，再进入 Docker
 - bind mount 之前，必须先确认宿主机目录边界，避免多个 Agent 共享写入
-- 编译前增加 API/ABI 版本门禁，防止用目标环境没有的 Python 3.14.5 API 修 Python 3.14.3
+- 编译前增加 API/ABI 版本门禁，防止用目标环境没有的更高 patchlevel API 修 Python 3.14.3
 - crash 取证改为 gdb/core/HIR 优先，日志只能补充，不能替代 native 证据
 - 远程命令首跑必须有输出契约，避免无输出后重复执行有副作用命令
 - 远程网络卡顿要先诊断 timeout、代理、DNS、镜像源，并在需要决策时询问用户
@@ -59,6 +60,8 @@
 - 新增 Agent 层：orchestrator 只做分发，environment verifier 做三态判断，runner/analyst/triager 接管阶段
 - 新原子层收窄为专业 skill：`cinderx-env-validate`、`cinderx-ab-run-slot`、`cinderx-gdb-core-triage`、`pyperformance-worker-run`、`cinderx-isa-microarch-compare`
 - 删除泛化入口，避免把任意项目都能套用的 skill 放进 CPython/CinderX 专业仓
+- 新增 PreToolUse validation hook：按 Bash 命令内容识别 CPython/CinderX 构建、Runtime、pyperformance 和 `pip install [options] .`
+- 高成本或改写环境的验证命令先阻断并要求环境审计/验证策略确认，已确认时用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 避免重复阻断
 
 ## 结论
 

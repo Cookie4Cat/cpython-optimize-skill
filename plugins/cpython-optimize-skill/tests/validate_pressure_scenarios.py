@@ -103,11 +103,13 @@ def main() -> int:
         "platform": skill("workflow-platform-differential-discovery"),
     }
     active_docs = "\n".join([entry, *workflows.values(), *agent_texts.values()])
+    all_active_docs = "\n".join([entry, *workflows.values(), *agent_texts.values(), *skill_texts.values()])
     scenarios = read(ROOT / "tests" / "pressure-scenarios.md")
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
     runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
+    validation_router = read(ROOT / "hooks" / "validation-skill-router")
 
-    for number in range(1, 35):
+    for number in range(1, 36):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -120,6 +122,8 @@ def main() -> int:
         if (SKILLS / old_name).exists():
             raise AssertionError(f"泛化或旧 skill 目录未删除: {old_name}")
         forbid(active_docs, f"`{old_name}`", "active docs")
+
+    forbid(all_active_docs, "3.14" + ".5", "active skill/agent/workflow docs")
 
     if len(entry.splitlines()) > 150:
         raise AssertionError("entry skill 应保持薄 router，当前行数超过 150")
@@ -202,10 +206,26 @@ def main() -> int:
         ],
         "runtime hook router",
     )
+    require_all(
+        validation_router,
+        [
+            "PreToolUse",
+            "permissionDecision",
+            "additionalContext",
+            "CPYTHON_OPTIMIZE_HOOK_ACK",
+            "using-cpython-optimize",
+            "validation-strategy",
+            "cinderx-env-validate",
+            "pyperformance",
+            "pip install",
+            "patchlevel.h",
+        ],
+        "validation hook router",
+    )
 
     require_all(
         skill_texts["cinderx-env-validate"],
-        ["Python 3.14.3", "3.14.5", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable"],
+        ["目标 Python 版本固定为 `Python 3.14.3`", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable"],
         "cinderx-env-validate",
     )
     require_all(
@@ -309,12 +329,14 @@ def main() -> int:
             "request_user_input",
             "AskUserQuestion",
             "clarifying-question-templates.md",
+            "validation-skill-router",
+            "CPYTHON_OPTIMIZE_HOOK_ACK",
         ],
         "pressure scenarios",
     )
     require_all(
         review,
-        ["专业 skill", "Agent 层", "cinderx-env-validate", "cinderx-ab-run-slot", "cinderx-gdb-core-triage"],
+        ["专业 skill", "Agent 层", "cinderx-env-validate", "cinderx-ab-run-slot", "cinderx-gdb-core-triage", "PreToolUse"],
         "dynamic pressure review",
     )
 

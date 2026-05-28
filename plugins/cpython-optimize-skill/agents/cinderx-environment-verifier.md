@@ -8,7 +8,7 @@
 
 - 用户指定远端 host、workspace、容器线或历史环境。
 - 准备运行 CinderX benchmark、Runtime 测试或 JIT 分析。
-- Python 3.14.x、`SOABI`、`patchlevel.h`、CinderX install 或 pyperformance worker 环境可能漂移。
+- Python 3.14.3、`SOABI`、`patchlevel.h`、CinderX install 或 pyperformance worker 环境可能漂移。
 
 ## 可调用技能
 

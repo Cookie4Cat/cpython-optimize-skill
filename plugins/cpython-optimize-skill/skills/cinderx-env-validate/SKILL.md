@@ -1,15 +1,19 @@
 ---
 name: cinderx-env-validate
-description: Use when 需要判断 CPython/CinderX 实验环境是否可复用，尤其涉及 Python 3.14.x、SOABI、patchlevel.h、_cinderx、pyperformance、Docker 双线或 JIT flags。
+description: Use when 需要判断 CPython/CinderX 实验环境是否可复用，尤其涉及 Python 3.14.3、SOABI、patchlevel.h、_cinderx、pyperformance、Docker 双线或 JIT flags。
 ---
 
 # CinderX Env Validate
 
 给 `cinderx-environment-verifier` 使用。结论只能是 `reusable`、`needs_bootstrap` 或 `needs_clean_bootstrap`。
 
+## 版本事实源
+
+目标 Python 版本固定为 `Python 3.14.3`。环境校验必须以目标解释器、容器内头文件和 `patchlevel.h` 为事实源，不能把更高 patchlevel 才有的 C API 当成可用能力。
+
 ## 必查项
 
-- Python：目标解释器路径、`Python 3.14.3` / `3.14.5`、`SOABI`、include 路径、`patchlevel.h`。
+- Python：目标解释器路径、`Python 3.14.3`、`SOABI`、include 路径、`patchlevel.h`。
 - CinderX：commit、branch、`cinderx.__file__`、`cinderx.is_initialized()`、`cinderx.get_import_error()`、`_cinderx`。
 - pyperformance：路径、`pyperformance 1.14`、benchmark 源码和 worker 能否继承环境。
 - toolchain：GCC、libstdc++、openEuler / 宿主发行版、Docker 可用性。
