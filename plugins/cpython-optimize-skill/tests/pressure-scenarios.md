@@ -385,3 +385,14 @@
 - 先问最高风险缺口，例如 `workflow_route` 或 `validation_level`
 - 每个问题有稳定 `question_id`、短 `header`、2-3 个互斥选项和推荐项
 - Codex / Claude Code / 文本降级的字段口径一致
+
+## 场景 34：查看历史记录不应触发运行态 crash 护栏
+
+用户话术示例：
+
+> 先用 `git show` 看一下上个提交改了什么。
+
+期望行为：
+- `git show`、`git log -p`、`git diff` 等历史/差异查看即使输出旧文档里的 `SIGSEGV`、`exit 139`、`core dump`，也不触发 crash triage 提醒
+- `rg`、`sed`、`cat` 等只读文本查看命令输出 hook 文档或压力场景里的触发词时，也不触发运行态护栏
+- 真正执行 Runtime 测试、pyperformance、pip/git 下载或远端命令时，stdout/stderr 出现 crash、timeout 或长时间无输出仍然触发对应提醒

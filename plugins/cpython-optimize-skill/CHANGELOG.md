@@ -2,6 +2,12 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.8.2
+
+- 收窄运行中 hook 的匹配范围：只扫描真实工具响应里的 stdout/stderr/output，不再扫描整段 hook payload
+- 为 `git show/log/diff`、`rg`、`sed`、`cat` 等只读查看命令增加观察型命令短路，避免历史记录或文档中的 crash/timeout 触发运行态护栏
+- 新增 runtime hook 回归测试和 pressure scenario 34，确保误报被覆盖，同时保留真实 crash、网络 timeout 和长时间无输出提醒
+
 ## v0.8.1
 
 - 新增统一 `反问 Gate`：当目标路线、实验轴、高成本动作、运行中异常或证据链缺口无法唯一确定时，要求先反问用户

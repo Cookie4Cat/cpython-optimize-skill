@@ -5,6 +5,65 @@ set -euo pipefail
 
 payload="$(cat || true)"
 
+extract_command() {
+    if command -v python3 >/dev/null 2>&1; then
+        printf '%s' "$payload" | python3 -c '
+import json
+import sys
+
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+
+tool_input = data.get("tool_input") if isinstance(data, dict) else None
+if isinstance(tool_input, dict):
+    command = tool_input.get("command") or tool_input.get("cmd")
+else:
+    command = None
+
+if not command and isinstance(data, dict):
+    command = data.get("command") or data.get("cmd")
+
+if isinstance(command, str):
+    sys.stdout.write(command)
+'
+    else
+        printf '%s' "$payload" | sed -nE 's/.*"(command|cmd)"[[:space:]]*:[[:space:]]*"([^"]*)".*/\2/p' | head -n 1
+    fi
+}
+
+extract_signal_text() {
+    if command -v python3 >/dev/null 2>&1; then
+        printf '%s' "$payload" | python3 -c '
+import json
+import sys
+
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+
+parts = []
+
+def collect_response(obj):
+    if not isinstance(obj, dict):
+        return
+    for key in ("stdout", "stderr", "output", "error", "message"):
+        value = obj.get(key)
+        if isinstance(value, str):
+            parts.append(value)
+    for key in ("tool_response", "tool_output", "response", "result"):
+        collect_response(obj.get(key))
+
+collect_response(data)
+sys.stdout.write("\n".join(parts))
+'
+    else
+        printf '%s' "$payload" | sed -nE 's/.*"(stdout|stderr|output|error|message)"[[:space:]]*:[[:space:]]*"([^"]*)".*/\2/p'
+    fi
+}
+
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -25,14 +84,43 @@ emit_context() {
 has_signal() {
     local pattern
     for pattern in "$@"; do
-        if printf '%s' "$payload" | grep -Eiq -- "$pattern"; then
+        if printf '%s' "$signal_text" | grep -Eiq -- "$pattern"; then
             return 0
         fi
     done
     return 1
 }
 
+is_observation_command() {
+    local command_text="$1"
+    local normalized
+    normalized="$(printf '%s' "$command_text" | tr '\n' ' ' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+/ /g')"
+
+    case "$normalized" in
+        git\ show*|git\ log*|git\ diff*|git\ grep*|git\ blame*|git\ status*|git\ rev-parse*|git\ ls-files*|git\ reflog*|git\ branch*|git\ stash\ show*)
+            return 0
+            ;;
+        git\ --no-pager\ show*|git\ --no-pager\ log*|git\ --no-pager\ diff*|git\ --no-pager\ blame*)
+            return 0
+            ;;
+        git\ -C\ *\ show*|git\ -C\ *\ log*|git\ -C\ *\ diff*|git\ -C\ *\ blame*)
+            return 0
+            ;;
+        rg*|grep*|sed*|cat*|less*|more*|head*|nl*|wc*|ls*|find*)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+command_text="$(extract_command || true)"
+signal_text="$(extract_signal_text || true)"
 duration_ms="$(printf '%s' "$payload" | sed -nE 's/.*"duration_ms"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p' | head -n 1)"
+
+if [ -n "$command_text" ] && is_observation_command "$command_text"; then
+    exit 0
+fi
 
 if has_signal \
     'SIGSEGV' \

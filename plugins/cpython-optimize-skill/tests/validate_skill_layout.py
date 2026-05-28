@@ -203,6 +203,9 @@ def validate_hooks() -> None:
         "gdb bt full",
         "validation-strategy",
         "cinderx-remote-lab-ops",
+        "extract_command",
+        "extract_signal_text",
+        "is_observation_command",
     ]:
         if needle not in router_text:
             raise AssertionError(f"runtime-skill-router 缺少关键信号: {needle}")

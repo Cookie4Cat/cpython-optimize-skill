@@ -107,7 +107,7 @@ def main() -> int:
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
     runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
 
-    for number in range(1, 34):
+    for number in range(1, 35):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -187,7 +187,19 @@ def main() -> int:
 
     require_all(
         runtime_router,
-        ["cinderx-gdb-core-triage", "cinderx-remote-lab-ops", "workflow-cinderx-crash-triage", "gdb bt full", "validation-strategy"],
+        [
+            "cinderx-gdb-core-triage",
+            "cinderx-remote-lab-ops",
+            "workflow-cinderx-crash-triage",
+            "gdb bt full",
+            "validation-strategy",
+            "extract_command",
+            "extract_signal_text",
+            "is_observation_command",
+            "git\\ show",
+            "git\\ log",
+            "git\\ diff",
+        ],
         "runtime hook router",
     )
 

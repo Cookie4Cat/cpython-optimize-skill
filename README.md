@@ -1,5 +1,12 @@
 # 🔧 CPython/CinderX 性能优化技能仓库
 
+[![Version](https://img.shields.io/badge/version-0.8.2-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
+[![Codex](https://img.shields.io/badge/Codex-plugin-0A7EA4.svg)](#codex-cli)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-D97757.svg)](#claude-code插件市场)
+[![Skills](https://img.shields.io/badge/skills-26-success.svg)](#-技能一览)
+[![Agents](https://img.shields.io/badge/agents-8-informational.svg)](#-agent-一览)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 面向个人工作流的 CPython/CinderX 性能优化与设计文档技能集合，以 Claude Code / Codex 插件形式交付。
 
 ---
@@ -75,7 +82,7 @@ Workflow 是多个技能和专门 Agent 的编排入口；原子技能继续负�
 /plugin install cpython-optimize-skill
 ```
 
-安装后，Agent 通过 skill 描述按需加载 `using-cpython-optimize`。插件还带有轻量运行中 hook：当 Bash 输出出现 `SIGSEGV`、`exit 139`、core dump、timeout 或远程无输出等信号时，只注入短提醒，提示 Agent 加载 `cinderx-gdb-core-triage` 或 `cinderx-remote-lab-ops`。
+安装后，Agent 通过 skill 描述按需加载 `using-cpython-optimize`。插件还带有轻量运行中 hook：当真实执行命令的 stdout/stderr 出现 `SIGSEGV`、`exit 139`、core dump、timeout 或远程无输出等信号时，只注入短提醒，提示 Agent 加载 `cinderx-gdb-core-triage` 或 `cinderx-remote-lab-ops`；`git show/log/diff`、`rg`、`sed`、`cat` 等只读查看命令不会因为历史文本里的触发词误报。
 
 首次启用或更新 hook 后，按宿主 Agent 的要求在 `/hooks` 中 review / trust 新的 hook 定义。
 
