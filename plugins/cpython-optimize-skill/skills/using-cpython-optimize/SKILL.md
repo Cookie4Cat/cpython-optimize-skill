@@ -1,6 +1,6 @@
 ---
 name: using-cpython-optimize
-description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分、pyperformance、Runtime 测试、crash、JIT 或 Kunpeng/x86 平台差异任务。
+description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分、pyperformance 性能测试、RuntimeTests 功能测试、crash、JIT 或 Kunpeng/x86 平台差异任务。
 ---
 
 # CPython/CinderX Optimize Router

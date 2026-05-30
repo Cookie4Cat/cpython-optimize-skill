@@ -27,6 +27,7 @@
 19. A/B 并行跑分：baseline/candidate 分 slot 和绑核
 20. 技能必须保持 CPython/CinderX 专业动作，不退回泛化入口
 21. 写完 CPython/CinderX 代码后，验证/本地安装命令应在执行前按命令内容触发技能
+22. pyperformance 正式性能测试前，需要区分 RuntimeTests 功能测试、test_cinderx/lib test 集成测试和 pyperformance 性能测试
 
 ## 当前结论
 
@@ -50,7 +51,7 @@
 - 远程命令首跑必须有输出契约，避免无输出后重复执行有副作用命令
 - 远程网络卡顿要先诊断 timeout、代理、DNS、镜像源，并在需要决策时询问用户
 - 新增验证阶梯：L0 静态审计、L1 最小功能验证、L2 单 benchmark、L3 小集合、L4 全量验证
-- 新增成本预算约束，防止调试循环默认进入近千条 Runtime 或近三小时 pyperformance 全量
+- 新增成本预算约束，防止调试循环默认进入近千条 RuntimeTests 功能测试或近三小时 pyperformance 性能测试全量
 - 新增三条优化 workflow：双平台差距、已知特性驱动、平台差异系统发现
 - Workflow 分为主 Workflow 和 Supporting Workflow
 - 顶层任务先选用户目标入口，再按阶段调用 supporting workflow
@@ -60,15 +61,16 @@
 - 新增 Agent 层：orchestrator 只做分发，environment verifier 做三态判断，runner/analyst/triager 接管阶段
 - 新原子层收窄为专业 skill：`cinderx-env-validate`、`cinderx-ab-run-slot`、`cinderx-gdb-core-triage`、`pyperformance-worker-run`、`cinderx-isa-microarch-compare`
 - 删除泛化入口，避免把任意项目都能套用的 skill 放进 CPython/CinderX 专业仓
-- 新增 PreToolUse validation hook：按 Bash 命令内容识别 CPython/CinderX 构建、Runtime、pyperformance 和 `pip install [options] .`
+- 新增 PreToolUse validation hook：按 Bash 命令内容识别 CPython/CinderX 构建、RuntimeTests 功能测试、pyperformance 性能测试和 `pip install [options] .`
 - 高成本或改写环境的验证命令先阻断并要求环境审计/验证策略确认，已确认时用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 避免重复阻断
+- 新增三类测试术语：RuntimeTests 是功能测试，test_cinderx/lib test 是集成测试，pyperformance 是性能测试
+- pyperformance 规则级 checklist 增加 driver/manager/worker、`bench_command()`、系统 site-packages、`--inherit-environ`、CPU 绑核和非 debug 正式运行口径
+- 从 GitCode issue/wiki 的测试命令中抽象出命令形态，但文档只保留 `<benchmark-selector>`、`<result.json>` 等占位
 
 ## 结论
 
 当前 skill 已经能支持第一轮真实对话级路由，但后续如果继续迭代，最值得补的是：
 
-- 更细的“正式对照 vs correctness 验证”切换提示
-- 对 `bench_command()` 类 benchmark 的专门 FAQ
 - 对“容器里有代理 / 没代理”这种环境前置条件的显式提醒
 - 把远程输出契约沉淀成可复用包装脚本
 - 后续可把验证阶梯实现成 CinderX 专用 runner，自动生成命令、产物目录和晋级记录

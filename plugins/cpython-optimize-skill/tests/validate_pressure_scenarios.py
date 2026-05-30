@@ -109,7 +109,7 @@ def main() -> int:
     runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
     validation_router = read(ROOT / "hooks" / "validation-skill-router")
 
-    for number in range(1, 36):
+    for number in range(1, 37):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -124,6 +124,8 @@ def main() -> int:
         forbid(active_docs, f"`{old_name}`", "active docs")
 
     forbid(all_active_docs, "3.14" + ".5", "active skill/agent/workflow docs")
+    forbid(all_active_docs, "correctness", "active skill/agent/workflow docs terminology")
+    forbid(all_active_docs, "Runtime 测试", "active skill/agent/workflow docs terminology")
 
     if len(entry.splitlines()) > 150:
         raise AssertionError("entry skill 应保持薄 router，当前行数超过 150")
@@ -250,7 +252,7 @@ def main() -> int:
     )
     require_all(
         skill_texts["cpython-runtime-test-run"],
-        ["CPython Runtime", "CinderX correctness", "L1 smoke", "L3", "L4", "近千条", "单元测试", "功能测试"],
+        ["RuntimeTests 功能测试", "test_cinderx/lib test 集成测试", "ci_pipeline/run_gate.py --suite runtime", "CINDERX_LOCAL_RUN_LIBTEST=1", "--suite cinderx_local", "L1 smoke", "L3", "L4", "近千条"],
         "cpython-runtime-test-run",
     )
     require_all(
@@ -260,12 +262,12 @@ def main() -> int:
     )
     require_all(
         skill_texts["pyperformance-worker-run"],
-        ["run_benchmark.py", "--worker", "bench_command", "sitecustomize", "LD_LIBRARY_PATH", "PYTHONPATH", "真实 worker"],
+        ["run_benchmark.py", "--worker", "driver", "manager", "bench_command()", "sitecustomize", "LD_LIBRARY_PATH", "PYTHONPATH", "--inherit-environ", "include-system-site-packages", "系统 site-packages", "bm/test-benchmark", "快速 L2", "非 debug"],
         "pyperformance-worker-run",
     )
     require_all(
         skill_texts["pyperformance-suite-run"],
-        ["python -m pyperformance run", "warmup", "loops", "run.json", "subset", "full", "正式", "反问 Gate"],
+        ["python -m pyperformance run", "--affinity", "--inherit-environ", "-b <benchmark-selector>", "-o <result.json>", "warmup", "loops", "run.json", "subset", "full", "非 debug", "关闭 HIR/JIT dump", "--debug-single-value", "pyperf compare_to", "反问 Gate"],
         "pyperformance-suite-run",
     )
     require_all(
@@ -331,6 +333,10 @@ def main() -> int:
             "clarifying-question-templates.md",
             "validation-skill-router",
             "CPYTHON_OPTIMIZE_HOOK_ACK",
+            "RuntimeTests 功能测试",
+            "test_cinderx/lib test 集成测试",
+            "pyperformance 性能测试",
+            "include-system-site-packages",
         ],
         "pressure scenarios",
     )

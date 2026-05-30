@@ -7,7 +7,7 @@
 ## 适用场景
 
 - `SIGSEGV`、`exit 139`、abort、assertion failure 或 core dump。
-- crash 出现在 pyperformance worker、Runtime 测试或 CinderX JIT 后。
+- crash 出现在 pyperformance worker、RuntimeTests 功能测试或 CinderX JIT 后。
 - 之前定位在反复加日志但没有 native 栈。
 
 ## 可调用技能

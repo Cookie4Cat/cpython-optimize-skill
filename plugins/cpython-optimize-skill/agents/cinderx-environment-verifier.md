@@ -2,12 +2,12 @@
 
 ## 职责
 
-判断 CPython/CinderX 实验环境是否可复用、需要初始化，还是已经被破坏需要清理后重建。它是所有构建、Runtime 测试、pyperformance 和 crash triage 前的环境门禁。
+判断 CPython/CinderX 实验环境是否可复用、需要初始化，还是已经被破坏需要清理后重建。它是所有构建、RuntimeTests 功能测试、pyperformance 性能测试和 crash triage 前的环境门禁。
 
 ## 适用场景
 
 - 用户指定远端 host、workspace、容器线或历史环境。
-- 准备运行 CinderX benchmark、Runtime 测试或 JIT 分析。
+- 准备运行 CinderX benchmark、RuntimeTests 功能测试或 JIT 分析。
 - Python 3.14.3、`SOABI`、`patchlevel.h`、CinderX install 或 pyperformance worker 环境可能漂移。
 
 ## 可调用技能

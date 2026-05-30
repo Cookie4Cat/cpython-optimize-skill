@@ -1,6 +1,6 @@
 # 🔧 CPython/CinderX 性能优化技能仓库
 
-[![Version](https://img.shields.io/badge/version-0.8.4-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.8.5-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
 [![Codex](https://img.shields.io/badge/Codex-plugin-0A7EA4.svg)](#codex-cli)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-D97757.svg)](#claude-code插件市场)
 [![Skills](https://img.shields.io/badge/skills-26-success.svg)](#-技能一览)
@@ -21,7 +21,7 @@
 | 🐳 `cinderx-env-bootstrap` | 初始化 Docker 双线、CinderX editable、pyperformance | templates/、scripts/ |
 | 🔌 `cinderx-remote-lab-ops` | 远端 SSH/tmux/rsync/docker compose 和输出契约 | — |
 | 🧷 `cinderx-ab-run-slot` | baseline/candidate slot、CPU affinity、结果目录隔离 | — |
-| 🧪 `cpython-runtime-test-run` | CPython Runtime / CinderX correctness 测试 | — |
+| 🧪 `cpython-runtime-test-run` | RuntimeTests 功能测试 / test_cinderx 和 lib test 集成测试 | — |
 | 🔎 `cinderx-smoke-check` | import cinderx、_cinderx、最小 JIT、HIR smoke | — |
 | 📊 `pyperformance-worker-run` | 单 benchmark worker、bench_command、sitecustomize | references/、scripts/ |
 | 📈 `pyperformance-suite-run` | 正式 `python -m pyperformance run` | — |

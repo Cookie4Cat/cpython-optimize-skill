@@ -19,7 +19,7 @@ description: Use when CPython/CinderX 优化任务需要在准确性与验证成
 | L3 | L3 小集合验证 | 验证收益或风险是否扩散到相关用例 | 相关 Runtime/pyperformance 子集 |
 | L4 | L4 全量验证 | 发布、提交、报告前的最终信心 | 全量 Runtime、全量 pyperformance、聚合报告 |
 
-禁止默认跳到 L4。近千条 Runtime 测试和近三小时 pyperformance 全量是晋级验证，不是调试循环默认动作。
+禁止默认跳到 L4。近千条 RuntimeTests 功能测试和近三小时 pyperformance 性能测试全量是晋级验证，不是调试循环默认动作。
 
 ## 晋级规则
 

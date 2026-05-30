@@ -291,17 +291,17 @@
 - 对 timeout、异常耗时、网络卡顿和无输出使用同一套诊断规则
 - 输出契约必须绑定到 CPython/CinderX lab 的 host、workspace、container line 和 tmux pane
 
-## 场景 26：单元/功能/Runtime 测试需要独立测试原子 skill
+## 场景 26：RuntimeTests 功能测试和集成测试需要独立测试原子 skill
 
 用户话术示例：
 
-> 这次先跑相关 Runtime 和功能测试，不需要 pyperformance。
+> 这次先跑相关 RuntimeTests 功能测试和 test_cinderx/lib test 集成测试，不需要 pyperformance 性能测试。
 
 期望行为：
-- 加载 `cpython-runtime-test-run` 处理单元测试、功能测试、Runtime 测试和聚合测试
+- 加载 `cpython-runtime-test-run` 处理单元测试、RuntimeTests 功能测试、test_cinderx/lib test 集成测试和聚合测试
 - 根据 `validation-strategy` 选择 L1 / L3 / L4，不默认跑近千条全量 Runtime
 - 失败重跑必须复用原命令和产物路径
-- 不把 correctness 测试塞进 pyperformance worker 或 suite skill
+- 不把功能测试/集成测试塞进 pyperformance worker 或 suite skill
 
 ## 场景 27：正式性能结果解读应独立于跑分命令
 
@@ -395,7 +395,7 @@
 期望行为：
 - `git show`、`git log -p`、`git diff` 等历史/差异查看即使输出旧文档里的 `SIGSEGV`、`exit 139`、`core dump`，也不触发 crash triage 提醒
 - `rg`、`sed`、`cat` 等只读文本查看命令输出 hook 文档或压力场景里的触发词时，也不触发运行态护栏
-- 真正执行 Runtime 测试、pyperformance、pip/git 下载或远端命令时，stdout/stderr 出现 crash、timeout 或长时间无输出仍然触发对应提醒
+- 真正执行 RuntimeTests 功能测试、pyperformance 性能测试、pip/git 下载或远端命令时，stdout/stderr 出现 crash、timeout 或长时间无输出仍然触发对应提醒
 
 ## 场景 35：验证命令执行前应按命令内容触发技能
 
@@ -409,3 +409,18 @@
 - 定向 Runtime / subset pyperformance 注入 `using-cpython-optimize` 和 `validation-strategy` 的 `additionalContext`，本次命令继续执行
 - 全量 pyperformance、全量 Runtime 或会改写环境的本地 pip install 先 `permissionDecision: deny`，要求完成环境审计、验证等级和范围确认
 - 已确认检查后可用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 前缀重试，避免重复阻断
+
+## 场景 36：pyperformance 正式测试前必须提醒三类测试与 worker 口径
+
+用户话术示例：
+
+> 这次要做非 debug 的正式性能验证，先别抓 HIR，只要跑目标集合并给出能提交的自验证结果。
+
+期望行为：
+- 先把自验证拆成三类：RuntimeTests 功能测试、test_cinderx/lib test 集成测试、pyperformance 性能测试
+- RuntimeTests 功能测试使用 `ci_pipeline/run_gate.py --suite runtime` 形态，test_cinderx/lib test 集成测试使用 `CINDERX_LOCAL_RUN_LIBTEST=1` 与 `--suite cinderx_local` 形态
+- pyperformance 前确认 driver/manager/worker/`bench_command()` 子进程链，不能用交互式 import 代替 worker 结果
+- CinderX worker 要确认 `include-system-site-packages = true` 或等价的系统 site-packages 继承；Python baseline 要确认不会误继承 CinderX 安装
+- 正式性能命令必须包含 CPU 绑核、warmup、输出路径和 `--inherit-environ`，至少继承代理、`LD_LIBRARY_PATH`、插件/JIT 关键变量
+- 非 debug 正式运行必须关闭 HIR/JIT dump、`--debug-single-value` 和临时诊断变量；快速 L2 可用 bm/test-benchmark 脚本，但不能把它当最终正式数据
+- 文档规则不硬编码具体 pyperformance 用例名或输出文件名，只使用 `<benchmark-selector>`、`<result.json>` 这类占位

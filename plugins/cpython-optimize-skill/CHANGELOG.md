@@ -2,6 +2,13 @@
 
 本文件记录 `cpython-optimize-skill` 的版本演进。
 
+## v0.8.5
+
+- 统一测试用语：RuntimeTests 是功能测试，test_cinderx/lib test 是集成测试，pyperformance 是性能测试
+- 为 `pyperformance-worker-run` 增加规则级 checklist：driver/manager/worker、`bench_command()`、系统 site-packages、`--inherit-environ`、快速 L2 和非 debug 口径
+- 为 `pyperformance-suite-run` 增加正式性能测试命令形态和故障排查：CPU 绑核、warmup、输出路径、环境继承、关闭 HIR/JIT dump 与结果对比
+- 参考 GitCode issue/wiki 的测试命令形态，抽象为占位命令，不在规则中硬编码具体 pyperformance 用例名或结果文件名
+
 ## v0.8.4
 
 - 新增 `PreToolUse` validation hook，在 CPython/CinderX 源码仓执行构建、Runtime、pyperformance 或本地安装命令前按命令内容路由技能

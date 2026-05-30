@@ -191,7 +191,7 @@ docker compose exec cpython-baseline sh -lc \
 ## 注意事项
 
 1. 这套环境比旧版 direct-bench 脚本更贴近真实环境，但仍然可能和真实服务器存在系统差异。
-2. `dask` 一类 benchmark 可能仍受网络/环境因素影响，不应和 JIT correctness 混为一谈。
+2. 部分 benchmark 可能仍受网络/环境因素影响，不应和 JIT 功能/集成问题混为一谈。
 3. 后续使用 Docker 做功能测试时，必须先开 `DIAG=1` 验证 HIR dump，再关闭 `DIAG` 跑性能。
 4. 如果出现 CinderX JIT 行为异常，优先检查：
    - `PYTHONJITAUTO` 是否与真实环境一致
