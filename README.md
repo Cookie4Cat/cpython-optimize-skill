@@ -1,6 +1,6 @@
 # 🔧 CPython/CinderX 性能优化技能仓库
 
-[![Version](https://img.shields.io/badge/version-0.8.5-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.8.6-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
 [![Codex](https://img.shields.io/badge/Codex-plugin-0A7EA4.svg)](#codex-cli)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-D97757.svg)](#claude-code插件市场)
 [![Skills](https://img.shields.io/badge/skills-26-success.svg)](#-技能一览)
@@ -8,6 +8,22 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 面向个人工作流的 CPython/CinderX 性能优化与设计文档技能集合，以 Claude Code / Codex 插件形式交付。
+
+---
+
+## 🌟 推荐插件 / 技能 / 工具
+
+这些仓库适合用来学习 agent 技能设计、插件封装、上下文压缩、代码图检索和多 Agent 编排。它们不一定都适合直接套进本仓，但都值得作为设计参考。
+
+| 项目 | 类型 | 推荐理由 | 适合借鉴 |
+|------|------|----------|----------|
+| [`obra/superpowers`](https://github.com/obra/superpowers) | 跨工具技能框架 | 用 skill 把 brainstorming、TDD、debug、verification、git worktree 等工程流程制度化。 | 技能触发、TDD 写 skill、验证前置、流程纪律 |
+| [`EveryInc/compound-engineering-plugin`](https://github.com/everyinc/compound-engineering-plugin) | 复合工程插件 | 把 plan、work、review、commit、PR、frontend polish 等工程动作做成插件化 workflow。 | 插件结构、工程任务编排、代码审查与提交流程 |
+| [`forrestchang/andrej-karpathy-skills`](https://github.com/forrestchang/andrej-karpathy-skills) | Karpathy 风格技能集 | 将 first-principles、简洁推理、研究/写作习惯沉淀成可调用技能。 | 思维风格技能、研究型任务提示、低噪声表达 |
+| [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) | Claude Code ↔ Codex 插件 | 在 Claude Code 中调用 Codex 做 review 或任务委派，适合作为跨 Agent 桥接参考。 | 插件互操作、任务委派、Codex/Claude Code 协作 |
+| [`colbymchenry/codegraph`](https://github.com/colbymchenry/codegraph) | 本地代码知识图 / MCP 工具 | 预索引代码库的符号、调用、依赖和路由关系，让 Agent 少 grep、少读文件。 | 按需上下文、代码图检索、MCP 工具设计 |
+| [`code-yeongyu/oh-my-openagent`](https://github.com/code-yeongyu/oh-my-openagent) | 多 Agent harness | 面向 Claude Code、Codex、OpenCode 等工具的多 Agent 配置与任务路由框架。 | Agent 编排、模型/角色匹配、harness 配置 |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 工程实践技能集 | 面向真实工程项目的可组合小技能，强调 TDD、诊断、架构改进和 issue/PR 工作流。 | 小而专的技能粒度、工程诊断、PRD/issue 拆解 |
 
 ---
 

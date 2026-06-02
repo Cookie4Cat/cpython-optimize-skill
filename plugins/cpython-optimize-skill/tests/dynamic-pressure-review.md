@@ -28,6 +28,7 @@
 20. 技能必须保持 CPython/CinderX 专业动作，不退回泛化入口
 21. 写完 CPython/CinderX 代码后，验证/本地安装命令应在执行前按命令内容触发技能
 22. pyperformance 正式性能测试前，需要区分 RuntimeTests 功能测试、test_cinderx/lib test 集成测试和 pyperformance 性能测试
+23. 本地 CPython checkout 是非目标版本时，应先安全切换到本地 3.14.3 来源，不直接远端下载
 
 ## 当前结论
 
@@ -66,6 +67,8 @@
 - 新增三类测试术语：RuntimeTests 是功能测试，test_cinderx/lib test 是集成测试，pyperformance 是性能测试
 - pyperformance 规则级 checklist 增加 driver/manager/worker、`bench_command()`、系统 site-packages、`--inherit-environ`、CPU 绑核和非 debug 正式运行口径
 - 从 GitCode issue/wiki 的测试命令中抽象出命令形态，但文档只保留 `<benchmark-selector>`、`<result.json>` 等占位
+- 本地 CPython 仓当前不是 3.14.3 时，先查 remote、commit、dirty 状态、ref 和 `Include/patchlevel.h`，优先用 `git worktree` / cache 安全切换
+- 网络不佳时优先复用本地 clone、worktree、tarball/cache 或已有容器源码；fetch/download 需要用户确认
 
 ## 结论
 

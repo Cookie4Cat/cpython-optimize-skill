@@ -424,3 +424,31 @@
 - 正式性能命令必须包含 CPU 绑核、warmup、输出路径和 `--inherit-environ`，至少继承代理、`LD_LIBRARY_PATH`、插件/JIT 关键变量
 - 非 debug 正式运行必须关闭 HIR/JIT dump、`--debug-single-value` 和临时诊断变量；快速 L2 可用 bm/test-benchmark 脚本，但不能把它当最终正式数据
 - 文档规则不硬编码具体 pyperformance 用例名或输出文件名，只使用 `<benchmark-selector>`、`<result.json>` 这类占位
+
+## 场景 37：本地 CPython 仓不是 3.14.3 时应尝试安全切换
+
+用户话术示例：
+
+> 本地 `/opt/Codex/cpython` 当前是 3.16.0a0，不符合 Python 3.14.3。外部网络不稳定，别急着远端下载源码，先看本地能不能切到 3.14.3。
+
+期望行为：
+- `cinderx-env-validate` 不把“当前 checkout 是 3.16.0a0”直接等价为“本地 CPython 不可信”
+- 先检查本地仓的 `git remote -v`、`git status --short`、`git show -s --format=%H`、`git tag/branch/ref` 和 `Include/patchlevel.h`
+- 如果本地存在 3.14.3 ref/tag/branch/cache，优先用 `git worktree` 独立 worktree 或专用目录切换，不污染用户当前 checkout
+- 切换后用目标解释器、`Include/patchlevel.h`、`sys.version`、`SOABI` 和 include 路径重新校验，校验通过才可作为 baseline 事实源
+- 如果本地仓有未提交改动、ref 不存在、dirty 状态无法隔离或需要联网 fetch，必须询问用户，而不是自动 `git checkout`、自动下载或自动清理
+- 外部网络不佳时优先复用本地 clone、worktree、tarball/cache 和已有容器；远端下载只作为最后选项
+
+## 场景 38：功能设计文档应使用总/分格式先讲清外部视角重点
+
+用户话术示例：
+
+> 写功能设计时别一上来就堆实现细节。每个功能域和功能项前面先用通俗语言讲清它解决什么、谁关心、边界和价值，再把细节放后半部展开。
+
+期望行为：
+- 加载 `design-documentation`
+- 功能设计文档允许采用总/分格式：每个功能域、功能项先总述，再分节展开实现、接口、DFX 和影响点
+- 功能域/功能项前部用通俗易懂、深入浅出的语言突出重点
+- 前部整理外部视角最关心的点：目标用户/系统、核心能力、输入输出、边界、收益、风险、验收口径
+- 前部可以辅以 mermaid 图形或表格，帮助读者快速理解流程、关系、状态或差异
+- 后半部再展开实现思路、实现设计、接口定义、DFX、需求分配等细节

@@ -22,7 +22,7 @@ RUN dnf install -y \
     curl \
     findutils \
     'gcc-toolset-14-gcc*' \
-    'gcc-toolset-14-c++*' \
+    'gcc-toolset-14-gcc-c++' \
     'gcc-toolset-14-binutils*' \
     'gcc-toolset-14-libstdc++*' \
     git \

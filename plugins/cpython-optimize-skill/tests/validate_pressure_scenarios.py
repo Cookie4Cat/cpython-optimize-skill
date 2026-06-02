@@ -90,6 +90,8 @@ def require_all(text: str, needles: list[str], context: str) -> None:
 
 def main() -> int:
     entry = skill("using-cpython-optimize")
+    design_skill = skill("design-documentation")
+    function_design_template = read(SKILLS / "design-documentation" / "references" / "function-design-template.md")
     question_templates = read(SKILLS / "using-cpython-optimize" / "references" / "clarifying-question-templates.md")
     skill_texts = {name: skill(name) for name in PROFESSIONAL_SKILLS}
     agent_texts = {name: agent(name) for name in PROFESSIONAL_AGENTS}
@@ -109,7 +111,7 @@ def main() -> int:
     runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
     validation_router = read(ROOT / "hooks" / "validation-skill-router")
 
-    for number in range(1, 37):
+    for number in range(1, 39):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -177,7 +179,7 @@ def main() -> int:
 
     require_all(
         agent_texts["cinderx-environment-verifier"],
-        ["reusable", "needs_bootstrap", "needs_clean_bootstrap", "cinderx-env-validate", "cinderx-env-clean", "cinderx-env-bootstrap"],
+        ["reusable", "needs_bootstrap", "needs_clean_bootstrap", "cinderx-env-validate", "cinderx-env-clean", "cinderx-env-bootstrap", "本地 CPython", "安全切换", "网络不佳"],
         "environment verifier",
     )
     require_all(
@@ -227,7 +229,7 @@ def main() -> int:
 
     require_all(
         skill_texts["cinderx-env-validate"],
-        ["目标 Python 版本固定为 `Python 3.14.3`", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable"],
+        ["目标 Python 版本固定为 `Python 3.14.3`", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable", "本地 CPython 仓", "3.16.0a0", "安全切换", "git worktree", "git status --short", "git show -s --format=%H", "Include/patchlevel.h"],
         "cinderx-env-validate",
     )
     require_all(
@@ -237,7 +239,7 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-env-bootstrap"],
-        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "反问 Gate"],
+        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "本地 clone", "worktree", "tarball/cache", "最后选项", "反问 Gate"],
         "cinderx-env-bootstrap",
     )
     require_all(
@@ -305,6 +307,16 @@ def main() -> int:
         ["背景", "复现命令", "环境指纹", "证据链", "根因", "patch", "回归结果"],
         "cinderx-optimization-report",
     )
+    require_all(
+        design_skill,
+        ["功能设计", "总/分格式", "功能域", "功能项", "通俗易懂", "深入浅出", "外部视角", "mermaid", "表格", "文档后半部"],
+        "design-documentation",
+    )
+    require_all(
+        function_design_template,
+        ["总述", "外部视角", "通俗说明", "mermaid", "表格", "后半部"],
+        "function design template",
+    )
 
     workflow_expectations = {
         "lab": ["cinderx-environment-verifier", "cinderx-env-validate", "cinderx-env-bootstrap", "cinderx-smoke-check"],
@@ -337,6 +349,12 @@ def main() -> int:
             "test_cinderx/lib test 集成测试",
             "pyperformance 性能测试",
             "include-system-site-packages",
+            "本地 CPython 仓",
+            "安全切换",
+            "git worktree",
+            "总/分格式",
+            "外部视角",
+            "mermaid",
         ],
         "pressure scenarios",
     )

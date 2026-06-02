@@ -238,6 +238,22 @@ def validate_hooks() -> None:
         raise AssertionError("validation-skill-router 需要可执行权限")
 
 
+def validate_template_contents() -> None:
+    cpython_baseline_dockerfile = (
+        SKILLS_DIR
+        / "cinderx-env-bootstrap"
+        / "templates"
+        / "cpython-baseline"
+        / "Dockerfile"
+    )
+    dockerfile_text = read_text(cpython_baseline_dockerfile)
+
+    if "gcc-toolset-14-gcc-c++" not in dockerfile_text:
+        raise AssertionError("cpython-baseline Dockerfile 缺少 openEuler GCC 14 C++ 正确包名: gcc-toolset-14-gcc-c++")
+    if "gcc-toolset-14-c++*" in dockerfile_text:
+        raise AssertionError("cpython-baseline Dockerfile 仍包含错误包名模板: gcc-toolset-14-c++*")
+
+
 def main() -> int:
     # 1. 顶层目录结构
     validate_directory_layout(ROOT, TOP_LEVEL_LAYOUT, "")
@@ -272,6 +288,9 @@ def main() -> int:
 
     # 5. agents/ 角色文档应保持中文模板
     validate_agent_docs()
+
+    # 6. 模板内容不能包含已知坏包名或坏命令
+    validate_template_contents()
 
     print("layout validation passed")
     return 0
