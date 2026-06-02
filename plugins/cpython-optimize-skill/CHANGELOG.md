@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.8.7] - 2026-06-02
+
+### Added
+
+- 为 `validation-skill-router` 增加精准 PreToolUse route：在 CPython/CinderX 仓内识别 `pyperf` / `pyperformance`、`ci_pipeline/run_gate.py`、pyperformance worker 和 CinderX benchmark helper，自动注入对应测试/性能技能提醒。
+
+### Fixed
+
+- 修正 runtime hook 对远程脚本 `EXIT_STATUS=139` / `EXIT_CODE=139` 输出形态的漏匹配，确保 smoke、RuntimeTests 或 pyperformance worker 崩溃时触发 crash triage 提醒。
+- 修正 `bash -lc 'grep ...'`、`ssh host 'grep ...'` 等包装后的文档检索误报；即使命令文本缺失，也会按 `path:line:text` grep 输出形态避免命中设计文档里的 `SIGSEGV` / `gdb bt full` 说明文字时触发 crash triage。
+
 ## [0.8.6] - 2026-06-02
 
 ### Added

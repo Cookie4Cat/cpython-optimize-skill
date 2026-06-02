@@ -71,6 +71,30 @@ Author: example
         run_router("rg -n 'SIGSEGV|timeout' plugins/cpython-optimize-skill", stdout=history_output) == "",
         "text search inspection must not trigger runtime guards",
     )
+    doc_search_output = (
+        "docs/design/detail.md:42:看到 SIGSEGV 后使用 gdb bt full 定位，"
+        "不要用日志替代 core dump 证据链\n"
+    )
+    require(
+        run_router(
+            "bash -lc 'grep -R \"SIGSEGV\\|gdb bt full\" docs/design'",
+            stdout=doc_search_output,
+        )
+        == "",
+        "wrapped local grep over documentation must not trigger crash triage",
+    )
+    require(
+        run_router(
+            "ssh kunpeng 'grep -R \"SIGSEGV\\|gdb bt full\" docs/design'",
+            stdout=doc_search_output,
+        )
+        == "",
+        "remote grep over documentation must not trigger crash triage",
+    )
+    require(
+        run_router("", stdout=doc_search_output) == "",
+        "grep-style documentation output without command text must not trigger crash triage",
+    )
 
     crash_context = run_router(
         "python -m test test_cinderx",
@@ -80,6 +104,15 @@ Author: example
         "workflow-cinderx-crash-triage" in crash_context
         and "cinderx-gdb-core-triage" in crash_context,
         "real crash output must trigger crash triage",
+    )
+    exit_status_context = run_router(
+        "ssh kunpeng 'bash /tmp/run-smoke.sh'",
+        stdout="EXIT_STATUS=139\nLOG=/tmp/autojit-phase0-smoke-fix3.log\n",
+    )
+    require(
+        "workflow-cinderx-crash-triage" in exit_status_context
+        and "cinderx-gdb-core-triage" in exit_status_context,
+        "EXIT_STATUS=139 output must trigger crash triage",
     )
 
     remote_context = run_router(

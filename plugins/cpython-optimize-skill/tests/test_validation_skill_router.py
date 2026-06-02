@@ -83,6 +83,46 @@ def main() -> int:
             and "CPYTHON_OPTIMIZE_HOOK_ACK=1" in full_perf_block,
             "full pyperformance runs should be blocked until validation planning is acknowledged",
         )
+        pyperf_context = run_router("python -m pyperf compare_to baseline.json candidate.json", repo)
+        require(
+            "additionalContext" in pyperf_context
+            and "pyperformance-result-compare" in pyperf_context
+            and "pyperf" in pyperf_context,
+            "pyperf result commands should route to performance result guidance",
+        )
+        runtime_gate_block = run_router("./python ci_pipeline/run_gate.py --suite runtime", repo)
+        require(
+            '"permissionDecision": "deny"' in runtime_gate_block
+            and "cpython-runtime-test-run" in runtime_gate_block
+            and "RuntimeTests 功能测试" in runtime_gate_block,
+            "CinderX RuntimeTests gate should be blocked until validation planning is acknowledged",
+        )
+        integration_context = run_router(
+            "CINDERX_LOCAL_RUN_LIBTEST=1 ./python ci_pipeline/run_gate.py --suite cinderx_local",
+            repo,
+        )
+        require(
+            "additionalContext" in integration_context
+            and "cpython-runtime-test-run" in integration_context
+            and "test_cinderx/lib test 集成测试" in integration_context,
+            "CinderX integration gate should route to runtime test guidance",
+        )
+        worker_context = run_router(
+            "./python /tmp/pyperformance/data-files/benchmarks/bm_x/run_benchmark.py --worker",
+            repo,
+        )
+        require(
+            "additionalContext" in worker_context
+            and "pyperformance-worker-run" in worker_context,
+            "pyperformance worker commands should route to worker guidance",
+        )
+        cinderx_perf_context = run_router("BENCHMARK=example ./scripts/test-benchmark.sh", repo)
+        require(
+            "additionalContext" in cinderx_perf_context
+            and "pyperformance-worker-run" in cinderx_perf_context
+            and "pyperformance-suite-run" in cinderx_perf_context,
+            "CinderX benchmark helper scripts should route to pyperformance guidance",
+        )
 
         local_editable_install = run_router(
             "python -m pip install --no-build-isolation --no-deps -e .",

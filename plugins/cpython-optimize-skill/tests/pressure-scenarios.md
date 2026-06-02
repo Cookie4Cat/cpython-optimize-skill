@@ -262,7 +262,7 @@
 > 一个定位任务跑了很久，中间还经历过上下文压缩。后来 Bash 输出里突然出现 Segmentation fault，但自然语言已经不会重新触发技能了。
 
 期望行为：
-- `PostToolUse` runtime hook 捕获 `SIGSEGV` / `exit 139` / `core dump` 等工具输出信号
+- `PostToolUse` runtime hook 捕获 `SIGSEGV` / `exit 139` / `EXIT_STATUS=139` / `core dump` 等工具输出信号
 - hook 只注入短 `additionalContext` 提醒，不重新塞入完整 `using-cpython-optimize`
 - Agent 根据提醒加载 `workflow-cinderx-crash-triage`，回到 `gdb bt full`、core dump、HIR dump 证据链
 - 遇到 `timeout`、网络卡顿或远程无输出时提醒加载 `cinderx-remote-lab-ops` 并及时询问用户
@@ -395,6 +395,8 @@
 期望行为：
 - `git show`、`git log -p`、`git diff` 等历史/差异查看即使输出旧文档里的 `SIGSEGV`、`exit 139`、`core dump`，也不触发 crash triage 提醒
 - `rg`、`sed`、`cat` 等只读文本查看命令输出 hook 文档或压力场景里的触发词时，也不触发运行态护栏
+- `bash -lc 'grep ...'`、`ssh host 'grep ...'` 等包装后的文档检索命中 `SIGSEGV` / `gdb bt full` 说明文字时，也不触发 crash triage 提醒
+- 即使 hook 没拿到原始命令，只要触发词都出现在 `path:line:text` 形式的源码/文档检索命中行里，也不触发 crash triage 提醒
 - 真正执行 RuntimeTests 功能测试、pyperformance 性能测试、pip/git 下载或远端命令时，stdout/stderr 出现 crash、timeout 或长时间无输出仍然触发对应提醒
 
 ## 场景 35：验证命令执行前应按命令内容触发技能
@@ -405,9 +407,9 @@
 
 期望行为：
 - `PreToolUse` 的 `validation-skill-router` 挂在 `Bash` 上，但脚本内部按命令内容做低成本过滤
-- 只在 CPython/CinderX 源码仓中匹配构建、Runtime、pyperformance 和本地 `pip install [options] .`
-- 定向 Runtime / subset pyperformance 注入 `using-cpython-optimize` 和 `validation-strategy` 的 `additionalContext`，本次命令继续执行
-- 全量 pyperformance、全量 Runtime 或会改写环境的本地 pip install 先 `permissionDecision: deny`，要求完成环境审计、验证等级和范围确认
+- 只在 CPython/CinderX 源码仓中匹配构建、Runtime、pyperformance、pyperf、CinderX run_gate、pyperformance worker/helper 和本地 `pip install [options] .`
+- 定向 Runtime、test_cinderx/lib test 集成测试、subset pyperformance、pyperf compare 和 worker/helper 注入 `using-cpython-optimize`、`validation-strategy` 及对应原子 skill 的 `additionalContext`，本次命令继续执行
+- 全量 pyperformance、全量 RuntimeTests 功能测试或会改写环境的本地 pip install 先 `permissionDecision: deny`，要求完成环境审计、验证等级和范围确认
 - 已确认检查后可用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 前缀重试，避免重复阻断
 
 ## 场景 36：pyperformance 正式测试前必须提醒三类测试与 worker 口径

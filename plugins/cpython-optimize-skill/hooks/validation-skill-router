@@ -161,12 +161,15 @@ def is_pip_install_local_project(tokens: list[str]) -> bool:
     return ok and has_local_project_install_arg(tokens[arg_start:])
 
 
-def starts_pyperformance_run(tokens: list[str]) -> tuple[bool, int]:
-    if len(tokens) >= 2 and Path(tokens[0]).name == "pyperformance" and tokens[1] == "run":
-        return True, 2
-    if len(tokens) >= 4 and is_python_executable(tokens[0]) and tokens[1:4] == ["-m", "pyperformance", "run"]:
-        return True, 4
-    return False, 0
+def starts_perf_cli(tokens: list[str]) -> tuple[bool, str, int]:
+    if not tokens:
+        return False, "", 0
+    command = Path(tokens[0]).name
+    if command in {"pyperf", "pyperformance"}:
+        return True, command, 1
+    if len(tokens) >= 3 and is_python_executable(tokens[0]) and tokens[1] == "-m" and tokens[2] in {"pyperf", "pyperformance"}:
+        return True, tokens[2], 3
+    return False, "", 0
 
 
 def has_benchmark_subset(args: list[str]) -> bool:
@@ -176,6 +179,37 @@ def has_benchmark_subset(args: list[str]) -> bool:
         if token in {"--benchmarks", "-b"} and index + 1 < len(args):
             return True
     return False
+
+
+def is_cinderx_run_gate(tokens: list[str]) -> tuple[bool, str, bool]:
+    for index, token in enumerate(tokens):
+        path = Path(token)
+        is_gate = path.name == "run_gate.py" and ("ci_pipeline" in path.parts or str(path) == "ci_pipeline/run_gate.py")
+        if not is_gate:
+            continue
+        args = tokens[index + 1 :]
+        suite = ""
+        for arg_index, arg in enumerate(args):
+            if arg.startswith("--suite="):
+                suite = arg.split("=", 1)[1]
+                break
+            if arg == "--suite" and arg_index + 1 < len(args):
+                suite = args[arg_index + 1]
+                break
+        if suite == "runtime":
+            return True, "RuntimeTests 功能测试; skills: cpython-runtime-test-run", True
+        if suite == "cinderx_local":
+            return True, "test_cinderx/lib test 集成测试; skills: cpython-runtime-test-run", False
+        return True, "CinderX run_gate 测试; skills: cpython-runtime-test-run", False
+    return False, "", False
+
+
+def is_pyperformance_worker_command(tokens: list[str]) -> bool:
+    return "--worker" in tokens and any(Path(token).name == "run_benchmark.py" for token in tokens)
+
+
+def is_cinderx_benchmark_helper(tokens: list[str]) -> bool:
+    return any(Path(token).name in {"test-benchmark.sh", "benchmark_harness.py"} for token in tokens)
 
 
 def is_runtime_test(tokens: list[str]) -> tuple[bool, bool]:
@@ -215,15 +249,33 @@ def classify_command(command: str) -> tuple[str, str]:
         if is_pip_install_local_project(chunk):
             return "deny", "pip install local project"
 
-        is_perf, arg_start = starts_pyperformance_run(chunk)
+        is_perf, perf_module, arg_start = starts_perf_cli(chunk)
         if is_perf:
-            if has_benchmark_subset(chunk[arg_start:]):
-                return "context", "targeted pyperformance"
-            return "deny", "full pyperformance"
+            args = chunk[arg_start:]
+            subcommand = args[0] if args else ""
+            if perf_module == "pyperformance" and subcommand == "run":
+                if has_benchmark_subset(args[1:]):
+                    return "context", "targeted pyperformance 性能测试; skills: pyperformance-suite-run / pyperformance-worker-run"
+                return "deny", "full pyperformance 性能测试; skills: pyperformance-suite-run / pyperformance-worker-run"
+            if perf_module == "pyperf":
+                return "context", "pyperf 结果/性能命令; skills: pyperformance-result-compare / pyperformance-suite-run"
+            return "context", "pyperformance CLI; skills: pyperformance-suite-run / pyperformance-worker-run / pyperformance-result-compare"
+
+        run_gate, run_gate_reason, run_gate_full = is_cinderx_run_gate(chunk)
+        if run_gate:
+            return ("deny", run_gate_reason) if run_gate_full else ("context", run_gate_reason)
+
+        if is_pyperformance_worker_command(chunk):
+            return "context", "pyperformance worker 性能测试; skills: pyperformance-worker-run"
+
+        if is_cinderx_benchmark_helper(chunk):
+            return "context", "CinderX pyperformance helper 性能测试; skills: pyperformance-worker-run / pyperformance-suite-run"
 
         runtime, full_suite = is_runtime_test(chunk)
         if runtime:
-            return ("deny", "full runtime tests") if full_suite else ("context", "targeted runtime tests")
+            if full_suite:
+                return "deny", "full RuntimeTests 功能测试; skills: cpython-runtime-test-run"
+            return "context", "targeted RuntimeTests 功能测试 / test_cinderx/lib test 集成测试; skills: cpython-runtime-test-run"
 
         if is_build_or_test(chunk):
             return "context", "build/test command"

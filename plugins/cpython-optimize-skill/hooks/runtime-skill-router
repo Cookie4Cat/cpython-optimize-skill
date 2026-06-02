@@ -96,6 +96,158 @@ is_observation_command() {
     local normalized
     normalized="$(printf '%s' "$command_text" | tr '\n' ' ' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+/ /g')"
 
+    if command -v python3 >/dev/null 2>&1; then
+        if python3 - "$normalized" <<'PY'
+import os
+import re
+import shlex
+import sys
+
+READ_COMMANDS = {
+    "rg",
+    "grep",
+    "sed",
+    "cat",
+    "less",
+    "more",
+    "head",
+    "tail",
+    "nl",
+    "wc",
+    "ls",
+    "find",
+}
+GIT_READ_SUBCOMMANDS = {
+    "show",
+    "log",
+    "diff",
+    "grep",
+    "blame",
+    "status",
+    "rev-parse",
+    "ls-files",
+    "reflog",
+    "branch",
+}
+SHELLS = {"bash", "sh", "zsh"}
+ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*")
+
+
+def split(command):
+    try:
+        return shlex.split(command)
+    except ValueError:
+        return command.split()
+
+
+def base_name(token):
+    return os.path.basename(token)
+
+
+def strip_leading_environment(tokens):
+    if tokens and tokens[0] == "env":
+        tokens = tokens[1:]
+        while tokens and (tokens[0].startswith("-") or ASSIGNMENT_RE.match(tokens[0])):
+            tokens = tokens[1:]
+    while tokens and ASSIGNMENT_RE.match(tokens[0]):
+        tokens = tokens[1:]
+    return tokens
+
+
+def command_after_timeout(tokens):
+    if not tokens or base_name(tokens[0]) != "timeout":
+        return None
+    i = 1
+    while i < len(tokens) and tokens[i].startswith("-"):
+        i += 1
+    if i < len(tokens):
+        i += 1
+    return " ".join(tokens[i:]) if i < len(tokens) else ""
+
+
+def command_after_shell_c(tokens):
+    if not tokens or base_name(tokens[0]) not in SHELLS:
+        return None
+    for i, token in enumerate(tokens[1:], start=1):
+        if token in ("-c", "-lc") or (token.endswith("c") and token.startswith("-")):
+            if i + 1 < len(tokens):
+                return tokens[i + 1]
+    return None
+
+
+def command_after_ssh(tokens):
+    if not tokens or base_name(tokens[0]) != "ssh":
+        return None
+    i = 1
+    options_with_value = {"-b", "-c", "-D", "-E", "-F", "-i", "-J", "-L", "-l", "-m", "-O", "-o", "-p", "-Q", "-R", "-S", "-W", "-w"}
+    while i < len(tokens):
+        token = tokens[i]
+        if token == "--":
+            i += 1
+            break
+        if token.startswith("-"):
+            if token in options_with_value and i + 1 < len(tokens):
+                i += 2
+            else:
+                i += 1
+            continue
+        i += 1
+        return " ".join(tokens[i:]) if i < len(tokens) else ""
+    return None
+
+
+def command_after_leading_cd(tokens):
+    if tokens and tokens[0] == "cd" and "&&" in tokens:
+        index = tokens.index("&&")
+        return " ".join(tokens[index + 1 :])
+    return None
+
+
+def is_git_read(tokens):
+    if not tokens or base_name(tokens[0]) != "git":
+        return False
+    i = 1
+    while i < len(tokens):
+        token = tokens[i]
+        if token == "--no-pager":
+            i += 1
+            continue
+        if token == "-C" and i + 1 < len(tokens):
+            i += 2
+            continue
+        if token.startswith("-"):
+            i += 1
+            continue
+        return token in GIT_READ_SUBCOMMANDS or (token == "stash" and i + 1 < len(tokens) and tokens[i + 1] == "show")
+    return False
+
+
+def is_observation(command, depth=0):
+    if not command or depth > 4:
+        return False
+
+    tokens = strip_leading_environment(split(command))
+    if not tokens:
+        return False
+
+    for unwrap in (command_after_shell_c, command_after_ssh, command_after_timeout, command_after_leading_cd):
+        inner = unwrap(tokens)
+        if inner:
+            return is_observation(inner, depth + 1)
+
+    if is_git_read(tokens):
+        return True
+
+    return base_name(tokens[0]) in READ_COMMANDS
+
+
+sys.exit(0 if is_observation(sys.argv[1]) else 1)
+PY
+        then
+            return 0
+        fi
+    fi
+
     case "$normalized" in
         git\ show*|git\ log*|git\ diff*|git\ grep*|git\ blame*|git\ status*|git\ rev-parse*|git\ ls-files*|git\ reflog*|git\ branch*|git\ stash\ show*)
             return 0
@@ -114,6 +266,35 @@ is_observation_command() {
     return 1
 }
 
+is_observation_output() {
+    if command -v python3 >/dev/null 2>&1; then
+        if printf '%s' "$signal_text" | python3 -c '
+import re
+import sys
+
+text = sys.stdin.read()
+signal_re = re.compile(
+    r"(SIGSEGV|Segmentation fault|signal\s+11|exit[\s_-]*(?:status|code)?\s*[:=]?\s*139|core dump|core dumped|SIGABRT|Aborted\s*\(core dumped\)|gdb\s+bt\s+full)",
+    re.IGNORECASE,
+)
+grep_hit_re = re.compile(
+    r"^[^:\n]+(?:\.(?:md|rst|txt|py|c|cc|cpp|cxx|h|hpp|hh|json|ya?ml|toml|sh|bash|zsh|log)|/[^:\n]*):\d+:",
+    re.IGNORECASE,
+)
+
+signal_lines = [line.strip() for line in text.splitlines() if signal_re.search(line)]
+if signal_lines and all(grep_hit_re.match(line) for line in signal_lines):
+    sys.exit(0)
+sys.exit(1)
+'
+        then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
 command_text="$(extract_command || true)"
 signal_text="$(extract_signal_text || true)"
 duration_ms="$(printf '%s' "$payload" | sed -nE 's/.*"duration_ms"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p' | head -n 1)"
@@ -122,11 +303,17 @@ if [ -n "$command_text" ] && is_observation_command "$command_text"; then
     exit 0
 fi
 
+if [ -n "$signal_text" ] && is_observation_output; then
+    exit 0
+fi
+
+# Remote smoke scripts often print EXIT_STATUS=139 or EXIT_CODE=139.
 if has_signal \
     'SIGSEGV' \
     'Segmentation fault' \
     'signal[[:space:]]+11' \
-    'exit[[:space:]]*(status|code)?[[:space:]]*:?[" ]*139' \
+    'exit[[:space:]_-]*(status|code)?[[:space:]]*[:=]?[" ]*139([^0-9]|$)' \
+    '(exit|return)[_-]?(status|code)[[:space:]]*[:=][[:space:]"]*139([^0-9]|$)' \
     'exit 139' \
     'core dump' \
     'core dumped' \

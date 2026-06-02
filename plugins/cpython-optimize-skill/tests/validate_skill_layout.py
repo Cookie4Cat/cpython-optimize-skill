@@ -201,6 +201,7 @@ def validate_hooks() -> None:
         "SIGSEGV",
         "Segmentation fault",
         "exit 139",
+        "EXIT_STATUS",
         "core dump",
         "additionalContext",
         "workflow-cinderx-crash-triage",
@@ -211,6 +212,7 @@ def validate_hooks() -> None:
         "extract_command",
         "extract_signal_text",
         "is_observation_command",
+        "is_observation_output",
     ]:
         if needle not in router_text:
             raise AssertionError(f"runtime-skill-router 缺少关键信号: {needle}")
@@ -227,6 +229,11 @@ def validate_hooks() -> None:
         "validation-strategy",
         "cinderx-env-validate",
         "pyperformance",
+        "pyperf",
+        "ci_pipeline/run_gate.py",
+        "cpython-runtime-test-run",
+        "pyperformance-worker-run",
+        "pyperformance-result-compare",
         "pip install",
         "Include",
         "patchlevel.h",
