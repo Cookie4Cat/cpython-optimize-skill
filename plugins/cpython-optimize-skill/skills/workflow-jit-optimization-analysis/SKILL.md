@@ -22,3 +22,5 @@ Supporting Workflow：单 benchmark JIT 证据分支。端到端任务中由主 
 ## Gate
 
 未证明 benchmark 本体进入 CinderX JIT，不进入 HIR/LIR 优化结论。必须先热点归因，再解释 IR。
+
+进入 JIT 和 HIR dump 前必须复用 `../using-cpython-optimize/references/pyperformance-env-contract.md`，确认真实 worker 继承了目标 `PYTHONPATH`、JIT flags、hook 和非 debug/diagnostic 口径，并提供 `.pth`、`pyvenv.cfg` / `include-system-site-packages`、`cinderx.is_initialized()` 等 worker 内 CinderX JIT 证据。

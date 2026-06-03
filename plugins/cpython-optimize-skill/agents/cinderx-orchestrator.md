@@ -20,6 +20,7 @@
 
 - 用户目标无法唯一映射到三条主 Workflow 或 supporting workflow 时，询问目标优先级。
 - benchmark、平台对、baseline/candidate、环境句柄或验证等级缺失且无法查证时，询问用户。
+- A/B 任务只有远程容器或 workspace 可用，但缺少 baseline commit/ref、口径 baseline 或可信 source path 时，不能把远程源码当 baseline；先分派 `cinderx-environment-verifier` 按 `baseline-source-contract.md` 校验。
 - 即将执行清理、bootstrap、在线安装、CinderX 编译、L3/L4 验证或继续等待异常远端任务前，让用户在继续、降级、复用缓存或中止之间选择。
 
 ## 输出要求

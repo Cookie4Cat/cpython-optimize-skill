@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PYPERFORMANCE_TMP="$(mktemp -d /tmp/pyperformance.XXXXXX)"
 CINDERX_WHEEL_TMP="$(mktemp -d /tmp/cinderx-wheel.XXXXXX)"
 CINDERX_WHEEL_CACHE_DIR=${CINDERX_WHEEL_CACHE_DIR:-/opt/cinderx-wheel-cache}
-PIP_INDEX_URL=${PIP_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple/}
+PIP_INDEX_URL=${PIP_INDEX_URL:-https://repo.huaweicloud.com/repository/pypi/simple}
 DEFAULT_CPU_JOBS=$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4)
 DEFAULT_MEM_JOBS=$(awk '/MemAvailable:/ {jobs = int($2 / 2097152); if (jobs < 1) jobs = 1; print jobs; exit}' /proc/meminfo 2>/dev/null || echo 1)
 if (( DEFAULT_MEM_JOBS < DEFAULT_CPU_JOBS )); then

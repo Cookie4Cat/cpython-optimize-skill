@@ -1,6 +1,6 @@
 # 🔧 CPython/CinderX 性能优化技能仓库
 
-[![Version](https://img.shields.io/badge/version-0.8.7-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.8.8-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
 [![Codex](https://img.shields.io/badge/Codex-plugin-0A7EA4.svg)](#codex-cli)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-D97757.svg)](#claude-code插件市场)
 [![Skills](https://img.shields.io/badge/skills-26-success.svg)](#-技能一览)
@@ -11,21 +11,41 @@
 
 ---
 
-## 🌟 推荐插件 / 技能 / 工具
+## 🔁 Workflow 一览
 
-这些仓库适合用来学习 agent 技能设计、插件封装、上下文压缩、代码图检索和多 Agent 编排。它们不一定都适合直接套进本仓，但都值得作为设计参考。
+主 Workflow 是用户目标入口；Supporting Workflow 是主流程内部按需调用的阶段或异常分支。
 
-| 项目 | 类型 | 推荐理由 | 适合借鉴 |
-|------|------|----------|----------|
-| [`obra/superpowers`](https://github.com/obra/superpowers) | 跨工具技能框架 | 用 skill 把 brainstorming、TDD、debug、verification、git worktree 等工程流程制度化。 | 技能触发、TDD 写 skill、验证前置、流程纪律 |
-| [`EveryInc/compound-engineering-plugin`](https://github.com/everyinc/compound-engineering-plugin) | 复合工程插件 | 把 plan、work、review、commit、PR、frontend polish 等工程动作做成插件化 workflow。 | 插件结构、工程任务编排、代码审查与提交流程 |
-| [`forrestchang/andrej-karpathy-skills`](https://github.com/forrestchang/andrej-karpathy-skills) | Karpathy 风格技能集 | 将 first-principles、简洁推理、研究/写作习惯沉淀成可调用技能。 | 思维风格技能、研究型任务提示、低噪声表达 |
-| [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) | Claude Code ↔ Codex 插件 | 在 Claude Code 中调用 Codex 做 review 或任务委派，适合作为跨 Agent 桥接参考。 | 插件互操作、任务委派、Codex/Claude Code 协作 |
-| [`colbymchenry/codegraph`](https://github.com/colbymchenry/codegraph) | 本地代码知识图 / MCP 工具 | 预索引代码库的符号、调用、依赖和路由关系，让 Agent 少 grep、少读文件。 | 按需上下文、代码图检索、MCP 工具设计 |
-| [`code-yeongyu/oh-my-openagent`](https://github.com/code-yeongyu/oh-my-openagent) | 多 Agent harness | 面向 Claude Code、Codex、OpenCode 等工具的多 Agent 配置与任务路由框架。 | Agent 编排、模型/角色匹配、harness 配置 |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 工程实践技能集 | 面向真实工程项目的可组合小技能，强调 TDD、诊断、架构改进和 issue/PR 工作流。 | 小而专的技能粒度、工程诊断、PRD/issue 拆解 |
+### 主 Workflow
 
----
+| Workflow | 用途 |
+|----------|------|
+| `workflow-cross-platform-delta-triage` | 双平台性能差距根因定位和收益验证 |
+| `workflow-feature-driven-optimization` | 已知特性驱动的代码优化、功能用例和性能验证 |
+| `workflow-platform-differential-discovery` | 系统分析 ISA / 微架构差异并发现优化点 |
+
+### Supporting Workflow
+
+| Workflow | 用途 |
+|----------|------|
+| `workflow-remote-cinderx-lab-setup` | 从零准备远程 CPython/CinderX 优化实验环境 |
+| `workflow-cinderx-crash-triage` | 复现、定位并记录 CinderX/pyperformance crash |
+| `workflow-pyperformance-regression` | L3/L4 正式 pyperformance 对比、性能回归和报告沉淀 |
+| `workflow-jit-optimization-analysis` | 单 benchmark JIT 热点、HIR/LIR 和优化点分析 |
+
+Workflow 是多个技能和专门 Agent 的编排入口；原子技能继续负责具体领域知识、命令约束和产物格式。
+
+## 👥 Agent 一览
+
+| Agent | 职责 |
+|-------|------|
+| `cinderx-orchestrator` | 运行时主 Agent，选择 workflow 并分派阶段 Agent |
+| `cinderx-environment-verifier` | 环境三态：可复用、新环境、被破坏环境 |
+| `pyperformance-baseline-runner` | 接管 baseline slot |
+| `pyperformance-candidate-runner` | 接管 candidate slot |
+| `pyperformance-benchmark-analyst` | 解读 run.json / speedup.json |
+| `cinderx-crash-triager` | 接管 native crash 取证 |
+| `cinderx-jit-analyst` | 接管 JIT/HIR/LIR 优化分析 |
+| `cinderx-platform-analyst` | 接管 ISA / 微架构差异分析 |
 
 ## 📦 技能一览
 
@@ -51,41 +71,19 @@
 | ✅ `validation-strategy` | 验证阶梯、成本预算、缓存复用 | — |
 | 📐 `design-documentation` | 架构/系统/功能/详细设计文档 | references/ |
 
-## 👥 Agent 一览
+## 🌟 推荐插件 / 技能 / 工具
 
-| Agent | 职责 |
-|-------|------|
-| `cinderx-orchestrator` | 运行时主 Agent，选择 workflow 并分派阶段 Agent |
-| `cinderx-environment-verifier` | 环境三态：可复用、新环境、被破坏环境 |
-| `pyperformance-baseline-runner` | 接管 baseline slot |
-| `pyperformance-candidate-runner` | 接管 candidate slot |
-| `pyperformance-benchmark-analyst` | 解读 run.json / speedup.json |
-| `cinderx-crash-triager` | 接管 native crash 取证 |
-| `cinderx-jit-analyst` | 接管 JIT/HIR/LIR 优化分析 |
-| `cinderx-platform-analyst` | 接管 ISA / 微架构差异分析 |
+这些仓库适合用来学习 agent 技能设计、插件封装、上下文压缩、代码图检索和多 Agent 编排。它们不一定都适合直接套进本仓，但都值得作为设计参考。
 
-## 🔁 Workflow 一览
-
-主 Workflow 是用户目标入口；Supporting Workflow 是主流程内部按需调用的阶段或异常分支。
-
-### 主 Workflow
-
-| Workflow | 用途 |
-|----------|------|
-| `workflow-cross-platform-delta-triage` | 双平台性能差距根因定位和收益验证 |
-| `workflow-feature-driven-optimization` | 已知特性驱动的代码优化、功能用例和性能验证 |
-| `workflow-platform-differential-discovery` | 系统分析 ISA / 微架构差异并发现优化点 |
-
-### Supporting Workflow
-
-| Workflow | 用途 |
-|----------|------|
-| `workflow-remote-cinderx-lab-setup` | 从零准备远程 CPython/CinderX 优化实验环境 |
-| `workflow-cinderx-crash-triage` | 复现、定位并记录 CinderX/pyperformance crash |
-| `workflow-pyperformance-regression` | L3/L4 正式 pyperformance 对比、性能回归和报告沉淀 |
-| `workflow-jit-optimization-analysis` | 单 benchmark JIT 热点、HIR/LIR 和优化点分析 |
-
-Workflow 是多个技能和专门 Agent 的编排入口；原子技能继续负责具体领域知识、命令约束和产物格式。
+| 项目 | 类型 | 推荐理由 | 适合借鉴 |
+|------|------|----------|----------|
+| [`obra/superpowers`](https://github.com/obra/superpowers) | 跨工具技能框架 | 用 skill 把 brainstorming、TDD、debug、verification、git worktree 等工程流程制度化。 | 技能触发、TDD 写 skill、验证前置、流程纪律 |
+| [`EveryInc/compound-engineering-plugin`](https://github.com/everyinc/compound-engineering-plugin) | 复合工程插件 | 把 plan、work、review、commit、PR、frontend polish 等工程动作做成插件化 workflow。 | 插件结构、工程任务编排、代码审查与提交流程 |
+| [`forrestchang/andrej-karpathy-skills`](https://github.com/forrestchang/andrej-karpathy-skills) | Karpathy 风格技能集 | 将 first-principles、简洁推理、研究/写作习惯沉淀成可调用技能。 | 思维风格技能、研究型任务提示、低噪声表达 |
+| [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) | Claude Code ↔ Codex 插件 | 在 Claude Code 中调用 Codex 做 review 或任务委派，适合作为跨 Agent 桥接参考。 | 插件互操作、任务委派、Codex/Claude Code 协作 |
+| [`colbymchenry/codegraph`](https://github.com/colbymchenry/codegraph) | 本地代码知识图 / MCP 工具 | 预索引代码库的符号、调用、依赖和路由关系，让 Agent 少 grep、少读文件。 | 按需上下文、代码图检索、MCP 工具设计 |
+| [`code-yeongyu/oh-my-openagent`](https://github.com/code-yeongyu/oh-my-openagent) | 多 Agent harness | 面向 Claude Code、Codex、OpenCode 等工具的多 Agent 配置与任务路由框架。 | Agent 编排、模型/角色匹配、harness 配置 |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 工程实践技能集 | 面向真实工程项目的可组合小技能，强调 TDD、诊断、架构改进和 issue/PR 工作流。 | 小而专的技能粒度、工程诊断、PRD/issue 拆解 |
 
 ---
 

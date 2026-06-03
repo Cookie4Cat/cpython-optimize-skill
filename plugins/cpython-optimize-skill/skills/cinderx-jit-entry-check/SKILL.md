@@ -17,6 +17,9 @@ description: Use when 需要确认 benchmark 本体是否真的进入 CinderX JI
 ## 检查项
 
 - 真实 worker 命令
+- `../using-cpython-optimize/references/pyperformance-env-contract.md` 中的 driver/worker 环境变量传递是否成立
+- worker 可见的 CinderX `.pth`、`site-packages` 和 `pyvenv.cfg` / `include-system-site-packages`
+- worker 内 `import cinderx`、`import _cinderx`、`cinderx.__file__`、`cinderx.get_import_error()`、`cinderx.is_initialized()`
 - jit.log 中目标函数
 - HIR 中 benchmark 本体片段
 - AutoJIT 阈值和 JIT flags

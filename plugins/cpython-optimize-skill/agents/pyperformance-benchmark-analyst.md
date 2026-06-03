@@ -17,6 +17,8 @@
 - `cinderx-optimization-report`
 - `validation-strategy`
 
+分析前必须引用 `skills/using-cpython-optimize/references/pyperformance-affinity-guidance.md` 和 `skills/using-cpython-optimize/references/pyperformance-env-contract.md`，先确认 baseline/candidate 的实际 `--affinity`、可用 CPU 映射和环境契约一致，并核对 CinderX `.pth`、worker venv、`--inherit-environ`、`cinderx.is_initialized()` 等 worker JIT 证据，再判断收益、回归和噪声。
+
 ## 反问 Gate
 
 - baseline/candidate `run.json`、`speedup.json` 或 baseline 含义缺失且无法从路径推断时，询问用户。

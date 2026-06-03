@@ -57,7 +57,6 @@ RUN wget -q -O /tmp/Python-${PYTHON_VERSION}.tar.xz \
     && cd /tmp/Python-${PYTHON_VERSION} \
     && if ! ./configure \
          --prefix=/opt/python314 \
-         --enable-shared \
          --with-ensurepip=install; then \
            status=$?; \
            echo '=== gcc -v ==='; \
@@ -70,6 +69,7 @@ RUN wget -q -O /tmp/Python-${PYTHON_VERSION}.tar.xz \
        fi \
     && make -j"$(nproc)" \
     && make install \
+    && /opt/python314/bin/python3 -c "import pathlib, sysconfig; assert not int(sysconfig.get_config_var('Py_ENABLE_SHARED') or 0); libdir = pathlib.Path(sysconfig.get_config_var('LIBDIR') or '/opt/python314/lib'); shared = list(libdir.glob('libpython3.14*.so*')); assert not shared, shared" \
     && ln -sf /opt/python314/bin/python3 /usr/local/bin/python3 \
     && ln -sf /opt/python314/bin/python3 /usr/local/bin/python \
     && ln -sf /opt/python314/bin/pip3 /usr/local/bin/pip3 \

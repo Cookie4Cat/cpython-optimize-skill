@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.8.8] - 2026-06-03
+
+### Changed
+
+- 强化 `workflow-feature-driven-optimization` 的 TDD 要求：改代码前检查是否需要补充或修改 RuntimeTests 功能用例和 test_cinderx/lib test 集成用例，并要求新增或修改的功能用例使用 Python `unittest` 框架。
+- 修正 `cinderx-env-bootstrap` 的 CPython 3.14.3 模板：`/opt/python314` 不再构建共享 libpython，并增加 AArch64 RuntimeTests TLS offset 探测相关的环境校验与清理指引。
+- 抽出 `pyperformance-env-contract.md` 共享引用，要求 suite、worker、JIT entry、HIR dump、result compare、regression workflow 和 pyperformance runner/analyst 在正式性能测试前核对 driver/worker 环境变量传递，并证明 worker 内 CinderX `.pth`、venv/site-packages 与 `cinderx.is_initialized()` 等 JIT 生效证据。
+- 新增 `pyperformance-affinity-guidance.md` 共享引用，说明 `--affinity` 的 CPU 绑核含义、当前可用 CPU 检查、原始 affinity 到实际 affinity 的映射，以及 A/B 并行 CPU set 不足时的串行降级策略。
+- 新增 `baseline-source-contract.md` 共享引用，防止 A/B 测试把远程可用容器里的当前源码直接当 baseline，要求单独证明 baseline commit/ref、source path、dirty 状态、`patchlevel.h`、`SOABI` 和唯一差异轴。
+- 将容器内默认 `pip` 镜像源从阿里云切换为华为云 `https://repo.huaweicloud.com/repository/pypi/simple`。
+
 ## [0.8.7] - 2026-06-02
 
 ### Added
@@ -227,7 +238,7 @@
 
 - 明确远程环境工作流：先确认 SSH 可登录，再使用 `rsync` 同步代码仓，再进入 Docker 容器隔离。
 - 强化远程宿主机目录隔离约束，避免 bind mount 覆盖已有目录。
-- 明确容器内 `pip` 默认应切到国内镜像源，优先阿里云或华为云。
+- 明确容器内 `pip` 默认应切到国内镜像源，优先华为云。
 - 明确 Arm vs x86 属于跨平台对比，必须参数和口径一致。
 
 ### Fixed

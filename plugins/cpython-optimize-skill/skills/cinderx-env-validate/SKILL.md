@@ -13,6 +13,20 @@ description: Use when 需要判断 CPython/CinderX 实验环境是否可复用�
 
 当前 checkout 不是事实源本身。比如本地 CPython 仓当前显示 `3.16.0a0`，只能说明当前工作树不符合目标版本，不能直接判定本地 CPython 仓整体不可信，也不能立刻改走远端下载。先尝试安全切换到本地已有的 3.14.3 可信来源。
 
+## Baseline Source 门禁
+
+涉及 A/B baseline 时，先读取 `../using-cpython-optimize/references/baseline-source-contract.md`。远程 SSH、tmux、Docker 容器或 pyperformance 可运行，只能证明执行环境可用，不能自动证明远程 workspace 当前源码可作为 baseline。
+
+baseline 必须单独校验：
+
+- 口径 baseline 与提交 baseline：例如 CPython 解释执行、CPython JIT、CinderX JIT，以及 baseline commit/ref。
+- 源码来源：用户指定的 baseline commit/ref、CPython 3.14.3 release source、干净 git worktree、可信 tarball/cache，或 `cpython-baseline` 容器 bind mount 指向的明确源码。
+- 仓库状态：`git status --short`、`git show -s --format=%H`、`git describe --tags --always --dirty`。
+- 版本证据：`patchlevel.h`、`SOABI`、目标解释器和 include 路径。
+- 污染检查：baseline 不能误继承 candidate editable install、CinderX `.pth`、`PYTHONPATH`、JIT hook 或 `CINDERX_*`。
+
+若远程源码 dirty、ref 不明、版本不符、bind mount 指向不明或混入 candidate 污染，返回 `baseline_source_untrusted` 并要求用户指定 baseline、创建干净 worktree 或重建 baseline 环境；不能把该源码交给 A/B runner。
+
 ## 本地 CPython 仓安全切换
 
 当用户给出 `/opt/Codex/cpython`、`CPYTHON_ROOT` 或其它本地 CPython clone 时，按顺序检查：
@@ -33,6 +47,8 @@ description: Use when 需要判断 CPython/CinderX 实验环境是否可复用�
 ## 必查项
 
 - Python：目标解释器路径、`Python 3.14.3`、`SOABI`、include 路径、`patchlevel.h`。
+- baseline source：按 `baseline-source-contract.md` 校验口径 baseline、提交 baseline、source path、commit/ref、dirty 状态和唯一差异轴。
+- AArch64 RuntimeTests TLS：检查 `Py_ENABLE_SHARED`、`CONFIG_ARGS`、`LIBDIR`、`LIBRARY`、`LDLIBRARY` 和 CMake `_Python_LIBRARY_RELEASE`；若解析到 `libpython3.14.so`、出现 `_PyThreadState_GetCurrent@plt`、`TLSDESC`、`DetectsThreadStateOffset` 失败或 `tstate_offset = -1`，判定为环境形态不满足 CinderX AArch64 TLS offset 探测，不要继续用该环境跑 RuntimeTests。
 - CinderX：commit、branch、`cinderx.__file__`、`cinderx.is_initialized()`、`cinderx.get_import_error()`、`_cinderx`。
 - pyperformance：路径、`pyperformance 1.14`、benchmark 源码和 worker 能否继承环境。
 - toolchain：GCC、libstdc++、openEuler / 宿主发行版、Docker 可用性。
@@ -41,8 +57,9 @@ description: Use when 需要判断 CPython/CinderX 实验环境是否可复用�
 
 ## 判定
 
-- `reusable`：依赖齐全、版本符合、smoke 通过，能直接交给 runner。
+- `reusable`：依赖齐全、版本符合、smoke 通过，能直接交给 runner；若涉及 A/B，还必须有 `baseline_source_verified`。
 - `needs_bootstrap`：目标目录或容器不存在，需要初始化。
-- `needs_clean_bootstrap`：存在但版本漂移、错误 editable install、错版本头文件或 CinderX 导入异常。
+- `needs_clean_bootstrap`：存在但版本漂移、错误 editable install、错版本头文件、CinderX 导入异常，或 AArch64 RuntimeTests 发现共享/PIC/TLSDESC Python 形态导致 TLS offset 探测不可用。
+- `baseline_source_untrusted`：执行环境可用但 baseline 源码事实源缺失或不可信；不能进入正式 A/B。
 
 输出必须带环境指纹和失败项，不能只写“环境正常”。

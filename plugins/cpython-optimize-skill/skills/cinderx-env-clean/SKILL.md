@@ -14,6 +14,7 @@ description: Use when CPython/CinderX lab 已存在但被污染、版本漂移�
 - 污染 `venv`、错误 `PYTHONPATH`、坏 `LD_LIBRARY_PATH`。
 - 错误 Docker 容器、挂错源码的 bind mount、残留 `pyperformance env`。
 - `patchlevel.h`、`SOABI`、解释器微版本不一致造成的错版本头文件。
+- AArch64 RuntimeTests 中 `/opt/python314` 构建为共享/PIC Python，导致 `_Python_LIBRARY_RELEASE` 指向 `libpython3.14.so`、`_PyThreadState_GetCurrent@plt`、`TLSDESC` 或 `DetectsThreadStateOffset` 失败。
 
 ## 保留对象
 

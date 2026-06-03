@@ -259,6 +259,25 @@ def validate_template_contents() -> None:
         raise AssertionError("cpython-baseline Dockerfile 缺少 openEuler GCC 14 C++ 正确包名: gcc-toolset-14-gcc-c++")
     if "gcc-toolset-14-c++*" in dockerfile_text:
         raise AssertionError("cpython-baseline Dockerfile 仍包含错误包名模板: gcc-toolset-14-c++*")
+    if "--enable-shared" in dockerfile_text:
+        raise AssertionError("cpython-baseline Dockerfile 不应构建共享 libpython，否则 AArch64 RuntimeTests TLS offset 探测会落到 PLT/TLSDESC 形态")
+
+    env_validate_text = read_text(SKILLS_DIR / "cinderx-env-validate" / "SKILL.md")
+    for needle in [
+        "Py_ENABLE_SHARED",
+        "_Python_LIBRARY_RELEASE",
+        "TLSDESC",
+        "DetectsThreadStateOffset",
+    ]:
+        if needle not in env_validate_text:
+            raise AssertionError(f"cinderx-env-validate 缺少 AArch64 TLS 环境漂移信号: {needle}")
+
+    setup_sh = SKILLS_DIR / "cinderx-env-bootstrap" / "scripts" / "setup.sh"
+    setup_text = read_text(setup_sh)
+    if "repo.huaweicloud.com/repository/pypi/simple" not in setup_text:
+        raise AssertionError("cinderx-env-bootstrap setup.sh 默认 pip 镜像源应为华为云")
+    if "mirrors.aliyun.com" in setup_text or "aliyun" in setup_text.lower():
+        raise AssertionError("cinderx-env-bootstrap setup.sh 不应再默认使用阿里云 pip 镜像源")
 
 
 def main() -> int:

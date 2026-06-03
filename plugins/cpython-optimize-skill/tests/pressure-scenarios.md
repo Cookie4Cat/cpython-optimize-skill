@@ -228,7 +228,9 @@
 期望行为：
 - 引导加载 `workflow-feature-driven-optimization` 和 `validation-strategy`
 - 先写清特性、预期影响路径和受影响用例
-- 先补功能/行为用例，再做目标性能验证
+- 按 TDD 要求检查是否需要补充或修改 RuntimeTests 功能用例和 test_cinderx/lib test 集成用例；不需要时写明理由
+- 新增或修改的功能用例必须使用 Python `unittest` 框架，不能只写 pytest 风格或脚本式断言
+- 先补功能/行为用例和必要集成用例，再做目标性能验证
 - 只有通过低阶验证后，才晋级到相关子集或全量验证
 
 ## 场景 21：系统性寻找平台差异优化点
@@ -454,3 +456,58 @@
 - 前部整理外部视角最关心的点：目标用户/系统、核心能力、输入输出、边界、收益、风险、验收口径
 - 前部可以辅以 mermaid 图形或表格，帮助读者快速理解流程、关系、状态或差异
 - 后半部再展开实现思路、实现设计、接口定义、DFX、需求分配等细节
+
+## 场景 39：AArch64 RuntimeTests TLS offset 失败应识别为 Python 构建形态问题
+
+用户话术示例：
+
+> RuntimeTests 里 `DetectsThreadStateOffset` 失败，`_Python_LIBRARY_RELEASE=/opt/python314/lib/libpython3.14.so`，`_PyThreadState_GetCurrent@plt`，真实函数体是 TLSDESC，最后 `tstate_offset = -1`。
+
+期望行为：
+- 不先归因到 AutoJIT 新代码或构建命令错误
+- 加载 `cinderx-env-validate` 检查 `/opt/python314` 的 `Py_ENABLE_SHARED`、`CONFIG_ARGS`、`LIBRARY`、`LDLIBRARY`、CMake `_Python_LIBRARY_RELEASE`
+- 判断共享/PIC Python 导致 AArch64 `_PyThreadState_GetCurrent` 变成 PLT/TLSDESC 形态，不满足 CinderX TLS offset 探测假设
+- 返回 `needs_clean_bootstrap` 或 `needs_bootstrap`，要求用非共享 libpython 的 CPython 3.14.3 重建 RuntimeTests 环境
+- `cinderx-env-bootstrap` 的 `/opt/python314` 模板不能构建共享 libpython，并要自检 `Py_ENABLE_SHARED` 与 `libpython3.14*.so*`
+
+## 场景 40：pyperformance 性能测试前必须核对环境变量契约
+
+用户话术示例：
+
+> 我调用 `pyperformance-suite-run` 跑性能，后来才发现 `PYTHONPATH` 和 `PYTHONJITAUTO` 只传给了 driver，worker 没继承，导致结果不可信。
+
+期望行为：
+- `pyperformance-suite-run`、`pyperformance-worker-run`、`pyperformance-result-compare` 和 `workflow-pyperformance-regression` 都引用 `pyperformance-env-contract.md`
+- 正式运行前列出 driver env、`--inherit-environ`、worker env、helper 变量和 baseline/candidate 唯一差异轴
+- 判断是否启用 CinderX JIT 时必须看真实 worker：确认 CinderX `.pth` 安装在 worker 可见的 `site-packages`，记录 `pyvenv.cfg` 的 `include-system-site-packages` 或等价 `PYTHONPATH` 传递
+- 检查代理、`LD_LIBRARY_PATH`、`PYTHONPATH`、`PYPERFORMANCE_HOOK_ROOT` / `PYPERF_HOOK_ROOT`、`PYTHONJIT*`、`CINDERX_*`、`DIAG` 等变量是否传到真实 worker
+- worker 内必须能证明 `import cinderx` / `_cinderx`、`cinderx.__file__`、`cinderx.get_import_error()` 和 `cinderx.is_initialized()` 符合 CinderX JIT 口径；只看 driver import 或交互式 import 不算数
+- 如果环境变量只到 driver、worker 缺失或 baseline/candidate 除目标变量外不一致，不能输出可信 pyperformance 收益结论
+- 正式非 debug 结果不得混入 HIR/JIT dump、`DIAG=1`、`JIT_LOG_FILE` 或 `--debug-single-value`
+
+## 场景 41：真实 pyperformance 命令里的 --affinity 需要按当前 CPU 资源变通
+
+用户话术示例：
+
+> 我给了真实测试命令 `python -m pyperformance run --affinity=262 ...`，但测试环境没有这么多 CPU 核，Agent 不要死抠必须完全一致。
+
+期望行为：
+- `pyperformance-suite-run`、`cinderx-ab-run-slot`、baseline/candidate runner 和 regression workflow 都引用 `pyperformance-affinity-guidance.md`
+- 说明 `--affinity` 是 pyperf/pyperformance 的 CPU 绑核参数，用于限制 worker 进程运行在哪些 CPU 上，降低调度噪声，不是 benchmark 选择器或必须逐字照抄的语义参数
+- 先用 `nproc`、`lscpu`、`taskset -pc $$` 或容器 cpuset 信息确认当前可用 CPU，再把用户命令中的 affinity 映射到当前可用 CPU
+- 目标是保持可比性：baseline/candidate 使用相同数量、同类位置、互不冲突的 CPU set；当前机器没有原命令对应核号时，应重分配可用 CPU 并记录映射理由
+- 不能因为无法使用原始高核号就停止；只有可用 CPU 不足以保证 A/B 隔离或正式口径时，才询问用户串行执行、降低验证等级或更换环境
+
+## 场景 42：远程容器可用不等于源码可作为 baseline
+
+用户话术示例：
+
+> Agent 检查远程环境容器可用后，直接把环境上的源码当成 baseline 跑 A/B，这不对。
+
+期望行为：
+- `cinderx-env-validate`、`cinderx-ab-run-slot`、`pyperformance-baseline-runner`、`pyperformance-result-compare` 和 regression workflow 都引用 `baseline-source-contract.md`
+- 明确区分“执行环境可用”和“baseline 源码可信”：Docker/SSH/tmux 可用只能返回环境可执行，不能自动把远程 workspace 源码当 baseline fact source
+- baseline 必须有用户指定或技能可验证的事实源：baseline commit/ref、CPython 3.14.3 release source、`cpython-baseline` 容器 bind mount、干净 git worktree、`patchlevel.h`、`git status --short`、`git show -s --format=%H`
+- 远程源码若 dirty、ref 不明、patchlevel/SOABI 不符、容器 bind mount 指向不明或混入 candidate editable install，不能作为 baseline；应返回 `baseline_source_untrusted` 并询问用户指定 baseline、创建干净 worktree 或重建 baseline 环境
+- 只有返回 `baseline_source_verified` 后，baseline runner 才能进入正式 pyperformance A/B
+- A/B 结果报告必须写明口径 baseline、提交 baseline、baseline source path、commit/ref、dirty 状态和是否与 candidate 只差目标变量

@@ -17,6 +17,8 @@
 - `pyperformance-worker-run`
 - `cinderx-remote-lab-ops`
 
+运行前必须引用 `skills/using-cpython-optimize/references/pyperformance-affinity-guidance.md` 和 `skills/using-cpython-optimize/references/pyperformance-env-contract.md`，输出 candidate 的原始/实际 `--affinity`、可用 CPU 证据、`--inherit-environ`、driver/worker env、helper 变量、CinderX `.pth`、worker `pyvenv.cfg` 和 `cinderx.is_initialized()` 证据，并和 baseline 对齐。
+
 ## 反问 Gate
 
 - candidate patch、commit、editable install 或 CinderX flags 有多个候选时，询问选择。
@@ -25,4 +27,4 @@
 
 ## 输出要求
 
-返回 candidate 的 CPU set、CPU affinity / 绑核命令、容器线、真实命令、`run.json`、stdout/stderr、exit status、日志路径和异常 benchmark。
+返回 candidate 的 CPU set、CPU affinity / 绑核命令、原始/实际 `--affinity`、可用 CPU 证据、容器线、真实命令、`run.json`、`--inherit-environ`、driver/worker 环境差异、`.pth` / venv / worker JIT 证据、stdout/stderr、exit status、日志路径和异常 benchmark。

@@ -15,6 +15,17 @@ description: Use when 需要初始化 CPython/CinderX 实验环境、Docker 双�
 - pyperformance：固定源码、依赖和 worker 环境。
 - pip mirror/cache：优先镜像源和已有缓存，不无限等待在线安装。
 - CPython baseline 源码：优先复用已验证的本地 clone、worktree、tarball/cache 或已有容器源码；远端下载是最后选项。
+- AArch64 RuntimeTests / JIT TLS：`/opt/python314` 必须使用非共享 libpython 形态构建，避免 `_PyThreadState_GetCurrent` 经 PLT 或 TLSDESC 动态 TLS 序列导致 `DetectsThreadStateOffset` 失败。
+
+## AArch64 TLS 约束
+
+构建 RuntimeTests 可用的 Python 时，不要为了通用嵌入场景构建共享 libpython。CinderX AArch64 TLS offset 探测当前依赖 `_PyThreadState_GetCurrent` 的固定 TLS offset 指令形态；共享/PIC Python 可能让 CMake 的 `Python::Python` 指向 `libpython3.14.so`，或让真实函数体变成 TLSDESC 动态 TLS，最终使 `tstate_offset = -1`。
+
+bootstrap 完成后必须自检：
+
+- `sysconfig.get_config_var("Py_ENABLE_SHARED")` 不是 `1`。
+- `/opt/python314/lib` 下不存在 `libpython3.14*.so*`。
+- RuntimeTests 相关 CMake 输出不应把 `_Python_LIBRARY_RELEASE` 解析到 `libpython3.14.so`。
 
 ## 本地来源优先
 

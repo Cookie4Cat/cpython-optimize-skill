@@ -30,6 +30,7 @@ description: Use when CPython/CinderX 需要运行 RuntimeTests 功能测试、t
 - L1 未过，不讨论性能收益。
 - 失败重跑必须复用原命令、环境变量、日志路径和 exit status。
 - `SIGSEGV` / `exit 139` 转 `cinderx-gdb-core-triage`。
+- AArch64 上出现 `DetectsThreadStateOffset` 失败、`tstate_offset = -1`、`_PyThreadState_GetCurrent@plt` 或 `TLSDESC` 时，先转 `cinderx-env-validate` / `cinderx-env-bootstrap` 检查 `/opt/python314` 是否错误构建为共享/PIC Python；不要先归因到 AutoJIT 新代码。
 - 测试前后记录 Python、CinderX commit、容器线和 JIT flags。
 - 功能测试或集成测试未通过时，不把 pyperformance 性能测试结果写成可提交结论。
 

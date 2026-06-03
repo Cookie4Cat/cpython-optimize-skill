@@ -110,8 +110,11 @@ def main() -> int:
     review = read(ROOT / "tests" / "dynamic-pressure-review.md")
     runtime_router = read(ROOT / "hooks" / "runtime-skill-router")
     validation_router = read(ROOT / "hooks" / "validation-skill-router")
+    pyperformance_env_contract = read(SKILLS / "using-cpython-optimize" / "references" / "pyperformance-env-contract.md")
+    pyperformance_affinity_guidance = read(SKILLS / "using-cpython-optimize" / "references" / "pyperformance-affinity-guidance.md")
+    baseline_source_contract = read(SKILLS / "using-cpython-optimize" / "references" / "baseline-source-contract.md")
 
-    for number in range(1, 39):
+    for number in range(1, 43):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -179,12 +182,12 @@ def main() -> int:
 
     require_all(
         agent_texts["cinderx-environment-verifier"],
-        ["reusable", "needs_bootstrap", "needs_clean_bootstrap", "cinderx-env-validate", "cinderx-env-clean", "cinderx-env-bootstrap", "本地 CPython", "安全切换", "网络不佳"],
+        ["reusable", "needs_bootstrap", "needs_clean_bootstrap", "cinderx-env-validate", "cinderx-env-clean", "cinderx-env-bootstrap", "本地 CPython", "安全切换", "网络不佳", "baseline-source-contract.md", "baseline_source_untrusted"],
         "environment verifier",
     )
     require_all(
         agent_texts["pyperformance-baseline-runner"],
-        ["baseline", "CPU set", "pyperformance-suite-run", "cinderx-ab-run-slot"],
+        ["baseline", "CPU set", "pyperformance-suite-run", "cinderx-ab-run-slot", "baseline-source-contract.md", "baseline_source_untrusted"],
         "baseline runner",
     )
     require_all(
@@ -234,7 +237,7 @@ def main() -> int:
 
     require_all(
         skill_texts["cinderx-env-validate"],
-        ["目标 Python 版本固定为 `Python 3.14.3`", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable", "本地 CPython 仓", "3.16.0a0", "安全切换", "git worktree", "git status --short", "git show -s --format=%H", "Include/patchlevel.h"],
+        ["目标 Python 版本固定为 `Python 3.14.3`", "SOABI", "patchlevel.h", "cinderx.__file__", "_cinderx", "pyperformance 1.14", "GCC", "openEuler", "reusable", "本地 CPython 仓", "3.16.0a0", "安全切换", "git worktree", "git status --short", "git show -s --format=%H", "Include/patchlevel.h", "Py_ENABLE_SHARED", "_Python_LIBRARY_RELEASE", "TLSDESC", "DetectsThreadStateOffset", "tstate_offset = -1", "baseline-source-contract.md", "baseline_source_untrusted"],
         "cinderx-env-validate",
     )
     require_all(
@@ -244,7 +247,7 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-env-bootstrap"],
-        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "本地 clone", "worktree", "tarball/cache", "最后选项", "反问 Gate"],
+        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "本地 clone", "worktree", "tarball/cache", "最后选项", "AArch64", "Py_ENABLE_SHARED", "libpython3.14*.so*", "DetectsThreadStateOffset", "反问 Gate"],
         "cinderx-env-bootstrap",
     )
     require_all(
@@ -254,12 +257,12 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-ab-run-slot"],
-        ["baseline", "candidate", "CPU affinity", "绑核", "结果目录", "不重叠", "并行", "反问 Gate"],
+        ["baseline", "candidate", "CPU affinity", "绑核", "结果目录", "不重叠", "并行", "pyperformance-affinity-guidance.md", "baseline-source-contract.md", "baseline_source_untrusted", "反问 Gate"],
         "cinderx-ab-run-slot",
     )
     require_all(
         skill_texts["cpython-runtime-test-run"],
-        ["RuntimeTests 功能测试", "test_cinderx/lib test 集成测试", "ci_pipeline/run_gate.py --suite runtime", "CINDERX_LOCAL_RUN_LIBTEST=1", "--suite cinderx_local", "L1 smoke", "L3", "L4", "近千条"],
+        ["RuntimeTests 功能测试", "test_cinderx/lib test 集成测试", "ci_pipeline/run_gate.py --suite runtime", "CINDERX_LOCAL_RUN_LIBTEST=1", "--suite cinderx_local", "L1 smoke", "L3", "L4", "近千条", "DetectsThreadStateOffset", "TLSDESC", "共享/PIC Python"],
         "cpython-runtime-test-run",
     )
     require_all(
@@ -269,17 +272,126 @@ def main() -> int:
     )
     require_all(
         skill_texts["pyperformance-worker-run"],
-        ["run_benchmark.py", "--worker", "driver", "manager", "bench_command()", "sitecustomize", "LD_LIBRARY_PATH", "PYTHONPATH", "--inherit-environ", "include-system-site-packages", "系统 site-packages", "bm/test-benchmark", "快速 L2", "非 debug"],
+        ["run_benchmark.py", "--worker", "driver", "manager", "bench_command()", "sitecustomize", ".pth", "pyvenv.cfg", "LD_LIBRARY_PATH", "PYTHONPATH", "--inherit-environ", "include-system-site-packages", "系统 site-packages", "cinderx.is_initialized()", "bm/test-benchmark", "快速 L2", "非 debug"],
         "pyperformance-worker-run",
     )
     require_all(
         skill_texts["pyperformance-suite-run"],
-        ["python -m pyperformance run", "--affinity", "--inherit-environ", "-b <benchmark-selector>", "-o <result.json>", "warmup", "loops", "run.json", "subset", "full", "非 debug", "关闭 HIR/JIT dump", "--debug-single-value", "pyperf compare_to", "反问 Gate"],
+        ["python -m pyperformance run", "--affinity", "pyperformance-affinity-guidance.md", "--inherit-environ", "-b <benchmark-selector>", "-o <result.json>", "warmup", "loops", "run.json", "subset", "full", "非 debug", "关闭 HIR/JIT dump", "--debug-single-value", "pyperf compare_to", "反问 Gate"],
         "pyperformance-suite-run",
+    )
+    for name in [
+        "cinderx-hir-dump",
+        "cinderx-jit-entry-check",
+        "pyperformance-worker-run",
+        "pyperformance-suite-run",
+        "pyperformance-result-compare",
+    ]:
+        require(skill_texts[name], "pyperformance-env-contract.md", name)
+    require(workflows["regression"], "pyperformance-env-contract.md", "workflow-pyperformance-regression")
+    require(workflows["jit"], "pyperformance-env-contract.md", "workflow-jit-optimization-analysis")
+
+    for name in [
+        "pyperformance-baseline-runner",
+        "pyperformance-candidate-runner",
+        "pyperformance-benchmark-analyst",
+    ]:
+        require(agent_texts[name], "pyperformance-env-contract.md", name)
+    for name in [
+        "pyperformance-baseline-runner",
+        "pyperformance-candidate-runner",
+        "pyperformance-benchmark-analyst",
+    ]:
+        require(agent_texts[name], "pyperformance-affinity-guidance.md", name)
+    require(skill_texts["pyperformance-result-compare"], "pyperformance-affinity-guidance.md", "pyperformance-result-compare")
+    require(workflows["regression"], "pyperformance-affinity-guidance.md", "workflow-pyperformance-regression")
+    for name in [
+        "cinderx-env-validate",
+        "cinderx-ab-run-slot",
+        "pyperformance-result-compare",
+    ]:
+        require(skill_texts[name], "baseline-source-contract.md", name)
+    require(agent_texts["cinderx-environment-verifier"], "baseline-source-contract.md", "cinderx-environment-verifier")
+    require(agent_texts["pyperformance-baseline-runner"], "baseline-source-contract.md", "pyperformance-baseline-runner")
+    require(workflows["regression"], "baseline-source-contract.md", "workflow-pyperformance-regression")
+    require_all(
+        baseline_source_contract,
+        [
+            "执行环境可用",
+            "baseline 源码可信",
+            "不能自动",
+            "远程 workspace",
+            "baseline_source_verified",
+            "baseline_source_untrusted",
+            "baseline commit/ref",
+            "口径 baseline",
+            "提交 baseline",
+            "CPython 3.14.3",
+            "cpython-baseline",
+            "bind mount",
+            "git status --short",
+            "git show -s --format=%H",
+            "patchlevel.h",
+            "SOABI",
+            "dirty",
+            "candidate editable install",
+            "只差目标变量",
+        ],
+        "baseline source contract",
+    )
+    require_all(
+        pyperformance_affinity_guidance,
+        [
+            "--affinity",
+            "CPU 绑核",
+            "worker",
+            "不是 benchmark 选择器",
+            "不能逐字照抄",
+            "nproc",
+            "lscpu",
+            "taskset -pc $$",
+            "cpuset",
+            "baseline/candidate",
+            "相同数量",
+            "互不冲突",
+            "重分配",
+            "串行执行",
+        ],
+        "pyperformance affinity guidance",
+    )
+    require_all(
+        pyperformance_env_contract,
+        [
+            "driver",
+            "manager",
+            "worker",
+            "bench_command()",
+            ".pth",
+            "site-packages",
+            "pyvenv.cfg",
+            "include-system-site-packages",
+            "--inherit-environ",
+            "LD_LIBRARY_PATH",
+            "PYTHONPATH",
+            "PYPERFORMANCE_HOOK_ROOT",
+            "PYPERF_HOOK_ROOT",
+            "PYTHONJIT",
+            "CINDERX_*",
+            "import cinderx",
+            "_cinderx",
+            "cinderx.__file__",
+            "cinderx.get_import_error()",
+            "cinderx.is_initialized()",
+            "driver import",
+            "DIAG",
+            "baseline/candidate",
+            "正式性能数据",
+        ],
+        "pyperformance env contract",
     )
     require_all(
         skill_texts["pyperformance-result-compare"],
-        ["run.json", "speedup.json", "baseline", "candidate", "方差", "噪声", "收益范围", "提交 baseline", "反问 Gate"],
+        ["run.json", "speedup.json", "baseline", "candidate", "方差", "噪声", "收益范围", "提交 baseline", "--affinity", "反问 Gate"],
         "pyperformance-result-compare",
     )
     require_all(
@@ -294,7 +406,7 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-jit-entry-check"],
-        ["benchmark 本体", "CinderX JIT", "启动期", "第三方包", "compile storm", "jit.log"],
+        ["benchmark 本体", "CinderX JIT", "启动期", "第三方包", "compile storm", "jit.log", ".pth", "pyvenv.cfg", "cinderx.is_initialized()"],
         "cinderx-jit-entry-check",
     )
     require_all(
@@ -329,7 +441,17 @@ def main() -> int:
         "regression": ["cinderx-environment-verifier", "pyperformance-baseline-runner", "pyperformance-candidate-runner", "pyperformance-benchmark-analyst"],
         "jit": ["cinderx-jit-analyst", "cinderx-jit-entry-check", "cinderx-hir-lir-analyze", "cinderx-hir-dump"],
         "cross_platform": ["cinderx-environment-verifier", "pyperformance-baseline-runner", "pyperformance-candidate-runner", "cinderx-platform-analyst"],
-        "feature": ["cinderx-environment-verifier", "cinderx-jit-analyst", "cpython-runtime-test-run", "pyperformance-result-compare"],
+        "feature": [
+            "cinderx-environment-verifier",
+            "cinderx-jit-analyst",
+            "cpython-runtime-test-run",
+            "pyperformance-result-compare",
+            "TDD",
+            "功能用例",
+            "集成用例",
+            "补充或修改",
+            "unittest",
+        ],
         "platform": ["cinderx-platform-analyst", "cinderx-isa-microarch-compare", "cinderx-jit-analyst", "pyperformance-result-compare"],
     }
     for workflow_name, needles in workflow_expectations.items():
@@ -360,6 +482,21 @@ def main() -> int:
             "总/分格式",
             "外部视角",
             "mermaid",
+            "DetectsThreadStateOffset",
+            "_Python_LIBRARY_RELEASE",
+            "TLSDESC",
+            "Py_ENABLE_SHARED",
+            "pyperformance-env-contract.md",
+            "--inherit-environ",
+            "worker env",
+            ".pth",
+            "pyvenv.cfg",
+            "cinderx.is_initialized()",
+            "cinderx.get_import_error()",
+            "pyperformance-affinity-guidance.md",
+            "baseline-source-contract.md",
+            "baseline_source_verified",
+            "baseline_source_untrusted",
         ],
         "pressure scenarios",
     )
