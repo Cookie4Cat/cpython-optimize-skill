@@ -14,6 +14,7 @@ description: Use when 需要初始化 CPython/CinderX 实验环境、Docker 双�
 - CinderX editable install：`python -m pip install -e . --no-build-isolation --no-deps --force-reinstall`。
 - pyperformance：固定源码、依赖和 worker 环境。
 - pip mirror/cache：优先镜像源和已有缓存，不无限等待在线安装。
+- 容器排障工具：按 `../using-cpython-optimize/references/container-tooling-guidance.md` 准备或补装 `gdb`、`ripgrep` / `rg`、`strace`、`perf`、`binutils` 等关键工具；缺工具时先探测网络和 cache，不要直接绕开取证路径。
 - CPython baseline 源码：优先复用已验证的本地 clone、worktree、tarball/cache 或已有容器源码；远端下载是最后选项。
 - AArch64 RuntimeTests / JIT TLS：`/opt/python314` 必须使用非共享 libpython 形态构建，避免 `_PyThreadState_GetCurrent` 经 PLT 或 TLSDESC 动态 TLS 序列导致 `DetectsThreadStateOffset` 失败。
 
@@ -40,6 +41,7 @@ bootstrap 完成后必须自检：
 
 - host、workspace、源码路径、Docker 双线或 Python 微版本缺失且无法唯一推断时，询问用户。
 - 在线依赖下载异常慢时，询问继续等待、切镜像、复用 cache 或中止。
+- 容器内补装 `gdb`、`ripgrep`、`strace`、`perf`、`binutils` 等工具遇到网络慢、metadata 无输出或镜像源异常时，及时反馈并询问继续等待、切镜像、复用 cache、上传离线包或中止。
 - `cinderx-test` 与 `cpython-baseline` 的目标线不明确时，询问是调试线还是正式对照线。
 - 本地 CPython 仓有未提交改动、需要切换 ref、需要 `git fetch --tags` 或要覆盖已有 worktree 时，询问用户。
 

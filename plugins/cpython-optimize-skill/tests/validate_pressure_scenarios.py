@@ -113,8 +113,9 @@ def main() -> int:
     pyperformance_env_contract = read(SKILLS / "using-cpython-optimize" / "references" / "pyperformance-env-contract.md")
     pyperformance_affinity_guidance = read(SKILLS / "using-cpython-optimize" / "references" / "pyperformance-affinity-guidance.md")
     baseline_source_contract = read(SKILLS / "using-cpython-optimize" / "references" / "baseline-source-contract.md")
+    container_tooling_guidance = read(SKILLS / "using-cpython-optimize" / "references" / "container-tooling-guidance.md")
 
-    for number in range(1, 43):
+    for number in range(1, 44):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -247,12 +248,12 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-env-bootstrap"],
-        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "本地 clone", "worktree", "tarball/cache", "最后选项", "AArch64", "Py_ENABLE_SHARED", "libpython3.14*.so*", "DetectsThreadStateOffset", "反问 Gate"],
+        ["cinderx-test", "cpython-baseline", "Docker 双线", "CinderX editable", "CPython baseline", "pip mirror", "pyperformance", "本地 clone", "worktree", "tarball/cache", "最后选项", "AArch64", "Py_ENABLE_SHARED", "libpython3.14*.so*", "DetectsThreadStateOffset", "container-tooling-guidance.md", "反问 Gate"],
         "cinderx-env-bootstrap",
     )
     require_all(
         skill_texts["cinderx-remote-lab-ops"],
-        ["SSH", "tmux", "rsync", "docker compose", "stdout/stderr", "exit status", "timeout", "日志路径", "反问 Gate"],
+        ["SSH", "tmux", "rsync", "docker compose", "stdout/stderr", "exit status", "timeout", "日志路径", "container-tooling-guidance.md", "补装", "反问 Gate"],
         "cinderx-remote-lab-ops",
     )
     require_all(
@@ -396,8 +397,42 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-gdb-core-triage"],
-        ["SIGSEGV", "exit 139", "core dump", "gdb", "bt full", "info registers", "同一真实命令", "日志不能替代", "反问 Gate"],
+        ["SIGSEGV", "exit 139", "core dump", "gdb", "bt full", "info registers", "同一真实命令", "日志不能替代", "container-tooling-guidance.md", "补装", "反问 Gate"],
         "cinderx-gdb-core-triage",
+    )
+    for name in [
+        "cinderx-env-bootstrap",
+        "cinderx-remote-lab-ops",
+        "cinderx-gdb-core-triage",
+    ]:
+        require(skill_texts[name], "container-tooling-guidance.md", name)
+    require_all(
+        container_tooling_guidance,
+        [
+            "gdb",
+            "ripgrep",
+            "rg",
+            "strace",
+            "perf",
+            "binutils",
+            "补装",
+            "不要直接绕开",
+            "command -v",
+            "dnf",
+            "yum",
+            "apt",
+            "DNS",
+            "代理",
+            "cache",
+            "timeout",
+            "metadata",
+            "dry run",
+            "继续等待",
+            "切镜像",
+            "离线包",
+            "exit status",
+        ],
+        "container tooling guidance",
     )
     require_all(
         skill_texts["cinderx-hir-dump"],
@@ -497,6 +532,8 @@ def main() -> int:
             "baseline-source-contract.md",
             "baseline_source_verified",
             "baseline_source_untrusted",
+            "container-tooling-guidance.md",
+            "补装",
         ],
         "pressure scenarios",
     )

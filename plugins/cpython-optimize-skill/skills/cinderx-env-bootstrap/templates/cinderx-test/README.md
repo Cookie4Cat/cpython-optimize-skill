@@ -160,6 +160,8 @@ docker compose -p cinderx-exp exec cinderx-arm64 sh -lc \
 
 不要再临时手写长串 `gdb --args ...`，这样可以保证每次调试命令一致。
 
+如果容器里缺少 `gdb`、`rg` / `ripgrep`、`strace`、`perf` 或 `binutils`，先按 `container-tooling-guidance.md` 探测包管理器、DNS、代理、镜像源和 cache，再补装工具。网络慢或 metadata 长时间无输出时要及时反馈，确认继续等待、切镜像、复用 cache、上传离线包或中止；不要直接绕开 native 取证。
+
 ## 代理说明
 
 容器内代理默认是：

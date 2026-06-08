@@ -30,6 +30,7 @@ exit "$status"
 
 - 无输出：查进程、tmux capture-pane、日志、CPU/IO/磁盘。
 - 网络慢：查 DNS、代理、pip mirror、git 连接和 cache。
+- 容器内缺少 `gdb`、`rg` / `ripgrep`、`strace`、`perf`、`binutils` 等排障工具时，先读取 `../using-cpython-optimize/references/container-tooling-guidance.md`，探测网络、包管理器、镜像源和 cache，再决定补装；不要直接绕开关键取证路径。
 - 不确定是否继续等待时，询问用户。
 
 不要为了补输出盲目重复构建、安装或 benchmark。
@@ -38,4 +39,5 @@ exit "$status"
 
 - 远端命令长时间无新增输出，且进程/日志无法证明正常推进时，询问继续等待、查看交互终端、中止还是换策略。
 - pip/git/网络下载异常慢时，询问继续等待、切镜像、复用 cache 或让用户处理网络。
+- 补装工具的 metadata refresh 或安装长时间无输出时，及时反馈并询问继续等待、切镜像、复用 cache、上传离线包或中止。
 - 要 kill 进程、清理目录、重跑有副作用命令或覆盖日志时，先询问。

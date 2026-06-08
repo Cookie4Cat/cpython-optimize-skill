@@ -511,3 +511,16 @@
 - 远程源码若 dirty、ref 不明、patchlevel/SOABI 不符、容器 bind mount 指向不明或混入 candidate editable install，不能作为 baseline；应返回 `baseline_source_untrusted` 并询问用户指定 baseline、创建干净 worktree 或重建 baseline 环境
 - 只有返回 `baseline_source_verified` 后，baseline runner 才能进入正式 pyperformance A/B
 - A/B 结果报告必须写明口径 baseline、提交 baseline、baseline source path、commit/ref、dirty 状态和是否与 candidate 只差目标变量
+
+## 场景 43：容器排障缺工具时应先评估补装而不是绕开
+
+用户话术示例：
+
+> 容器里没有 `gdb` 或 `rg`，Agent 直接改用日志和 grep 绕过去了，效率很低。
+
+期望行为：
+- `cinderx-remote-lab-ops`、`cinderx-env-bootstrap` 和 `cinderx-gdb-core-triage` 都引用 `container-tooling-guidance.md`
+- 缺少 `gdb`、`ripgrep` / `rg`、`strace`、`perf`、`binutils` 等关键排障工具时，先判断是否能补装；不要直接绕开 native crash、文本检索或 perf 取证路径
+- 补装前先探测网络和包管理器状态：`command -v dnf/yum/apt`、镜像源、DNS、代理、cache、`timeout` 包裹的 metadata/install dry run
+- 网络慢或 metadata 长时间无输出时，及时反馈并询问继续等待、切镜像、复用 cache、离线包或中止，不要沉默等待
+- 若确实无法补装，才记录原因并使用降级方案；报告必须写明缺失工具、探测命令、安装命令、耗时/exit status 和替代方案

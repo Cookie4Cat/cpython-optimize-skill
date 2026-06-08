@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.8.9] - 2026-06-08
+
+### Changed
+
+- 新增 `container-tooling-guidance.md` 共享引用，要求容器排障缺少 `gdb`、`ripgrep`、`strace`、`perf`、`binutils` 等工具时先探测网络和包管理器再补装，网络慢时及时反馈，而不是绕开关键取证路径。
+
 ## [0.8.8] - 2026-06-03
 
 ### Changed
