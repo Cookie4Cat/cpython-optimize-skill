@@ -25,4 +25,4 @@ description: Use when 需要确认 benchmark 本体是否真的进入 CinderX JI
 - AutoJIT 阈值和 JIT flags
 - `PYTHONJITHUGEPAGES`、`PYTHONJITAUTO` 等平台护栏
 
-输出 `entered_cinderx_jit`、证据片段、排除项和下一步。
+输出 `entered_cinderx_jit`、证据片段、排除项和下一步。若 `entered_cinderx_jit=false`、目标热函数不进入 gate 或主要解释执行，下一步转 `cinderx-interpreter-case-analyze`，不要硬套 HIR/LIR 结论。

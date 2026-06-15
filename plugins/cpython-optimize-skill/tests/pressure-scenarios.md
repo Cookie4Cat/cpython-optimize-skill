@@ -524,3 +524,16 @@
 - 补装前先探测网络和包管理器状态：`command -v dnf/yum/apt`、镜像源、DNS、代理、cache、`timeout` 包裹的 metadata/install dry run
 - 网络慢或 metadata 长时间无输出时，及时反馈并询问继续等待、切镜像、复用 cache、离线包或中止，不要沉默等待
 - 若确实无法补装，才记录原因并使用降级方案；报告必须写明缺失工具、探测命令、安装命令、耗时/exit status 和替代方案
+
+## 场景 44：非 JIT / 解释执行用例需要独立分析格式
+
+用户话术示例：
+
+> 这个 pyperformance 用例没有进入 CinderX JIT gate，但 CinderX JIT 模式比 CPython JIT baseline 慢，帮我分析差距和优化空间。
+
+期望行为：
+- `workflow-jit-optimization-analysis` 先用 `cinderx-jit-entry-check` 判定是否进入 JIT；进入 JIT 才继续 `cinderx-hir-lir-analyze` 的 HIR、deopt、LIR 和平台差异分析
+- 未进入 JIT 或主要解释执行时，切到 `cinderx-interpreter-case-analyze`，不能硬套 HIR/LIR 结论
+- 解释执行分析必须先拿穿刺证据，再输出分阶段平铺表，对比 CPython JIT baseline、CinderX JIT 优化前、CinderX JIT 优化后、已优化量和剩余 gap
+- 分阶段平铺表之后必须给函数形状表：基于 autojit 分类模型列出全量函数形状、热度、字节码形态、动态特性、gate 策略和不进入 gate 的原因
+- 只要存在不进入 gate 的函数，就做阶段详细拆解，说明发现、分类、gate、拒绝、解释执行 fallback、运行时开销各阶段的证据和下一步优化点

@@ -25,6 +25,7 @@ PROFESSIONAL_SKILLS = [
     "cinderx-hir-dump",
     "cinderx-jit-entry-check",
     "cinderx-hir-lir-analyze",
+    "cinderx-interpreter-case-analyze",
     "cinderx-isa-microarch-compare",
     "cinderx-optimization-report",
     "validation-strategy",
@@ -115,7 +116,7 @@ def main() -> int:
     baseline_source_contract = read(SKILLS / "using-cpython-optimize" / "references" / "baseline-source-contract.md")
     container_tooling_guidance = read(SKILLS / "using-cpython-optimize" / "references" / "container-tooling-guidance.md")
 
-    for number in range(1, 44):
+    for number in range(1, 45):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -195,6 +196,11 @@ def main() -> int:
         agent_texts["pyperformance-candidate-runner"],
         ["candidate", "CPU set", "pyperformance-suite-run", "cinderx-ab-run-slot"],
         "candidate runner",
+    )
+    require_all(
+        agent_texts["cinderx-jit-analyst"],
+        ["cinderx-hir-lir-analyze", "cinderx-interpreter-case-analyze", "解释执行", "非 JIT"],
+        "cinderx-jit-analyst",
     )
 
     require_all(
@@ -446,8 +452,29 @@ def main() -> int:
     )
     require_all(
         skill_texts["cinderx-hir-lir-analyze"],
-        ["HIR", "LIR", "uop", "机器码", "deopt", "frame layout", "调用约定", "修改方案"],
+        ["JIT 用例", "HIR", "LIR", "uop", "机器码", "deopt", "frame layout", "调用约定", "平台差异", "修改方案"],
         "cinderx-hir-lir-analyze",
+    )
+    require_all(
+        skill_texts["cinderx-interpreter-case-analyze"],
+        [
+            "解释执行用例",
+            "非 JIT",
+            "穿刺证据",
+            "分阶段平铺表",
+            "CPython JIT baseline",
+            "CinderX JIT 优化前",
+            "CinderX JIT 优化后",
+            "已优化量",
+            "剩余 gap",
+            "函数形状表",
+            "autojit 分类模型",
+            "全量函数形状",
+            "gate 策略",
+            "不进入 gate",
+            "阶段详细拆解",
+        ],
+        "cinderx-interpreter-case-analyze",
     )
     require_all(
         skill_texts["cinderx-isa-microarch-compare"],
@@ -474,7 +501,7 @@ def main() -> int:
         "lab": ["cinderx-environment-verifier", "cinderx-env-validate", "cinderx-env-bootstrap", "cinderx-smoke-check"],
         "crash": ["cinderx-crash-triager", "cinderx-gdb-core-triage", "cinderx-hir-dump", "pyperformance-worker-run"],
         "regression": ["cinderx-environment-verifier", "pyperformance-baseline-runner", "pyperformance-candidate-runner", "pyperformance-benchmark-analyst"],
-        "jit": ["cinderx-jit-analyst", "cinderx-jit-entry-check", "cinderx-hir-lir-analyze", "cinderx-hir-dump"],
+        "jit": ["cinderx-jit-analyst", "cinderx-jit-entry-check", "cinderx-hir-lir-analyze", "cinderx-interpreter-case-analyze", "cinderx-hir-dump"],
         "cross_platform": ["cinderx-environment-verifier", "pyperformance-baseline-runner", "pyperformance-candidate-runner", "cinderx-platform-analyst"],
         "feature": [
             "cinderx-environment-verifier",
@@ -534,6 +561,12 @@ def main() -> int:
             "baseline_source_untrusted",
             "container-tooling-guidance.md",
             "补装",
+            "cinderx-interpreter-case-analyze",
+            "解释执行用例",
+            "穿刺证据",
+            "分阶段平铺表",
+            "函数形状表",
+            "gate 策略",
         ],
         "pressure scenarios",
     )

@@ -1,13 +1,13 @@
 ---
 name: workflow-jit-optimization-analysis
-description: Use when 单个 CinderX JIT 用例需要 L2 热点归因、HIR/LIR/机器码证据、JIT 优化点判断，或主流程需要单 benchmark 证据分支。
+description: Use when 单个 CinderX 用例需要先判断是否进入 JIT，再分别做 JIT HIR/LIR 分析或非 JIT/解释执行阶段分析。
 ---
 
-# JIT Optimization Analysis Workflow
+# JIT / Interpreter Case Analysis Workflow
 
 ## 定位
 
-Supporting Workflow：单 benchmark JIT 证据分支。端到端任务中由主 Workflow 在 L2 阶段调用。
+Supporting Workflow：单 benchmark 用例分析分支。端到端任务中由主 Workflow 在 L2 阶段调用，先判定 JIT / 非 JIT，再分流。
 
 ## Agent 分派
 
@@ -15,12 +15,16 @@ Supporting Workflow：单 benchmark JIT 证据分支。端到端任务中由主 
 |------|-------|------|
 | 环境确认 | `cinderx-environment-verifier` | `cinderx-smoke-check` |
 | worker 运行 | `cinderx-jit-analyst` | `pyperformance-worker-run` |
-| 进入 JIT | `cinderx-jit-analyst` | `cinderx-jit-entry-check` |
-| HIR/LIR | `cinderx-jit-analyst` | `cinderx-hir-dump`、`cinderx-hir-lir-analyze` |
+| 进入 JIT 判定 | `cinderx-jit-analyst` | `cinderx-jit-entry-check` |
+| JIT 用例 | `cinderx-jit-analyst` | `cinderx-hir-dump`、`cinderx-hir-lir-analyze` |
+| 解释执行用例 / 非 JIT | `cinderx-jit-analyst` | `cinderx-interpreter-case-analyze` |
 | 报告 | `cinderx-jit-analyst` | `cinderx-optimization-report` |
 
 ## Gate
 
-未证明 benchmark 本体进入 CinderX JIT，不进入 HIR/LIR 优化结论。必须先热点归因，再解释 IR。
+未证明 benchmark 本体进入 CinderX JIT，不进入 HIR/LIR 优化结论。必须先由 `cinderx-jit-entry-check` 分流：
+
+- `entered_cinderx_jit=true`：进入 JIT 用例路径，查看 HIR、排查 deopt、分析 LIR / uop / 机器码和平台差异。
+- `entered_cinderx_jit=false` 或目标热函数不进入 gate：进入解释执行用例路径，使用 `cinderx-interpreter-case-analyze` 输出穿刺证据、分阶段平铺表、函数形状表和 gate 策略。
 
 进入 JIT 和 HIR dump 前必须复用 `../using-cpython-optimize/references/pyperformance-env-contract.md`，确认真实 worker 继承了目标 `PYTHONPATH`、JIT flags、hook 和非 debug/diagnostic 口径，并提供 `.pth`、`pyvenv.cfg` / `include-system-site-packages`、`cinderx.is_initialized()` 等 worker 内 CinderX JIT 证据。

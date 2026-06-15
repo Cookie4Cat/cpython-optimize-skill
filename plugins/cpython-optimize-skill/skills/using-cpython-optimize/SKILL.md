@@ -26,7 +26,7 @@ description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分�
 | `pyperformance-candidate-runner` / candidate-runner | candidate slot 跑分 |
 | `pyperformance-benchmark-analyst` | `run.json` / `speedup.json` 结果解读 |
 | `cinderx-crash-triager` / crash-triager | `SIGSEGV`、`exit 139`、core dump |
-| `cinderx-jit-analyst` | CinderX JIT、HIR/LIR、机器码优化点 |
+| `cinderx-jit-analyst` | CinderX JIT、HIR/LIR、解释执行用例、机器码优化点 |
 | `cinderx-platform-analyst` | Kunpeng/x86、ISA、微架构差异 |
 
 ## 反问 Gate
@@ -55,7 +55,7 @@ description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分�
 
 ## 专业 Skill
 
-`cinderx-env-validate`、`cinderx-env-clean`、`cinderx-env-bootstrap`、`cinderx-remote-lab-ops`、`cinderx-ab-run-slot`、`cpython-runtime-test-run`、`cinderx-smoke-check`、`pyperformance-worker-run`、`pyperformance-suite-run`、`pyperformance-result-compare`、`cinderx-gdb-core-triage`、`cinderx-hir-dump`、`cinderx-jit-entry-check`、`cinderx-hir-lir-analyze`、`cinderx-isa-microarch-compare`、`cinderx-optimization-report`、`validation-strategy`。
+`cinderx-env-validate`、`cinderx-env-clean`、`cinderx-env-bootstrap`、`cinderx-remote-lab-ops`、`cinderx-ab-run-slot`、`cpython-runtime-test-run`、`cinderx-smoke-check`、`pyperformance-worker-run`、`pyperformance-suite-run`、`pyperformance-result-compare`、`cinderx-gdb-core-triage`、`cinderx-hir-dump`、`cinderx-jit-entry-check`、`cinderx-hir-lir-analyze`、`cinderx-interpreter-case-analyze`、`cinderx-isa-microarch-compare`、`cinderx-optimization-report`、`validation-strategy`。
 
 ## Workflow 路由
 
@@ -65,7 +65,7 @@ description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分�
 - 环境准备：`workflow-remote-cinderx-lab-setup`
 - crash：`workflow-cinderx-crash-triage`
 - 正式回归：`workflow-pyperformance-regression`
-- 单 benchmark JIT：`workflow-jit-optimization-analysis`
+- 单 benchmark JIT / 非 JIT 用例分析：`workflow-jit-optimization-analysis`
 
 ## 不变原则
 

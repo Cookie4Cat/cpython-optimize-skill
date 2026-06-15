@@ -28,6 +28,7 @@ REQUIRED_SKILLS = {
     "cinderx-hir-dump",
     "cinderx-jit-entry-check",
     "cinderx-hir-lir-analyze",
+    "cinderx-interpreter-case-analyze",
     "cinderx-isa-microarch-compare",
     "cinderx-optimization-report",
     "validation-strategy",

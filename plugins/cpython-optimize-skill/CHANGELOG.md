@@ -9,6 +9,11 @@
 ### Added
 
 - 新增 `cinderx-fast-validation` 技能，用 repo 外部 `ccache` compiler wrapper 加速 CinderX `setup_release`、release wheel 和 gate 重复验证，并提供可复用的 prelude 安装脚本。
+- 新增 `cinderx-interpreter-case-analyze`，用于非 JIT / 解释执行用例分析：要求穿刺证据、分阶段平铺表、函数形状表、autojit gate 策略和不进入 gate 的阶段详细拆解。
+
+### Changed
+
+- 细分单 benchmark 用例分析路径：进入 CinderX JIT 时继续使用 `cinderx-hir-lir-analyze` 分析 HIR、deopt、LIR 和平台差异；未进入 gate 时转入解释执行分析。
 
 ## [0.8.9] - 2026-06-08
 

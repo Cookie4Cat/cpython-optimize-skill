@@ -67,6 +67,7 @@ Workflow 是多个技能和专门 Agent 的编排入口；原子技能继续负�
 | 🧾 `cinderx-hir-dump` | 真实 worker 命令叠加 HIR / jit.log | — |
 | 🔬 `cinderx-jit-entry-check` | 确认 benchmark 本体进入 CinderX JIT | — |
 | 🔬 `cinderx-hir-lir-analyze` | HIR/LIR/uop/机器码和修改方案 | references/ |
+| 🧩 `cinderx-interpreter-case-analyze` | 非 JIT / 解释执行用例的阶段表、函数形状和 gate 策略 | — |
 | 🧭 `cinderx-isa-microarch-compare` | Kunpeng/x86 ISA、微架构、perf 差异矩阵 | — |
 | 📝 `cinderx-optimization-report` | CinderX 优化报告和证据链沉淀 | references/ |
 | ✅ `validation-strategy` | 验证阶梯、成本预算、缓存复用 | — |
@@ -157,6 +158,7 @@ Agent 会根据任务自动选择对应技能，无需手动加载。
 │   │   ├── cinderx-hir-dump/
 │   │   ├── cinderx-jit-entry-check/
 │   │   ├── cinderx-hir-lir-analyze/
+│   │   ├── cinderx-interpreter-case-analyze/
 │   │   ├── cinderx-isa-microarch-compare/
 │   │   ├── cinderx-optimization-report/
 │   │   ├── validation-strategy/
