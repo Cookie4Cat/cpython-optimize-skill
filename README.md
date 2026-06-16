@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-0.8.9-blue.svg)](plugins/cpython-optimize-skill/CHANGELOG.md)
 [![Codex](https://img.shields.io/badge/Codex-plugin-0A7EA4.svg)](#codex-cli)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-D97757.svg)](#claude-code插件市场)
-[![Skills](https://img.shields.io/badge/skills-26-success.svg)](#-技能一览)
+[![Skills](https://img.shields.io/badge/skills-27-success.svg)](#-技能一览)
 [![Agents](https://img.shields.io/badge/agents-8-informational.svg)](#-agent-一览)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -59,6 +59,7 @@ Workflow 是多个技能和专门 Agent 的编排入口；原子技能继续负�
 | 🧷 `cinderx-ab-run-slot` | baseline/candidate slot、CPU affinity、结果目录隔离 | — |
 | 🧪 `cpython-runtime-test-run` | RuntimeTests 功能测试 / test_cinderx 和 lib test 集成测试 | — |
 | 🔎 `cinderx-smoke-check` | import cinderx、_cinderx、最小 JIT、HIR smoke | — |
+| ⚡ `cinderx-fast-validation` | 用 ccache wrapper 加速 CinderX setup_release、release wheel 和 gate 重复验证 | scripts/ |
 | 📊 `pyperformance-worker-run` | 单 benchmark worker、bench_command、sitecustomize | references/、scripts/ |
 | 📈 `pyperformance-suite-run` | 正式 `python -m pyperformance run` | — |
 | 📉 `pyperformance-result-compare` | run.json、speedup.json、收益/回归/噪声判断 | — |
@@ -148,6 +149,7 @@ Agent 会根据任务自动选择对应技能，无需手动加载。
 │   │   ├── cinderx-ab-run-slot/
 │   │   ├── cpython-runtime-test-run/
 │   │   ├── cinderx-smoke-check/
+│   │   ├── cinderx-fast-validation/
 │   │   ├── pyperformance-worker-run/
 │   │   ├── pyperformance-suite-run/
 │   │   ├── pyperformance-result-compare/

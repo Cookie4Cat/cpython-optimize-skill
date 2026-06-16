@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增 `cinderx-fast-validation` 技能，用 repo 外部 `ccache` compiler wrapper 加速 CinderX `setup_release`、release wheel 和 gate 重复验证，并提供可复用的 prelude 安装脚本。
+
 ## [0.8.9] - 2026-06-08
 
 ### Changed
