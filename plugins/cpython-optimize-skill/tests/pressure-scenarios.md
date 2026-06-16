@@ -537,3 +537,28 @@
 - 解释执行分析必须先拿穿刺证据，再输出分阶段平铺表，对比 CPython JIT baseline、CinderX JIT 优化前、CinderX JIT 优化后、已优化量和剩余 gap
 - 分阶段平铺表之后必须给函数形状表：基于 autojit 分类模型列出全量函数形状、热度、字节码形态、动态特性、gate 策略和不进入 gate 的原因
 - 只要存在不进入 gate 的函数，就做阶段详细拆解，说明发现、分类、gate、拒绝、解释执行 fallback、运行时开销各阶段的证据和下一步优化点
+
+## 场景 45：hook 提醒必须显式注入 Agent 文档路径
+
+用户话术示例：
+
+> 技能里写了 Agent，但实际运行时没看到 Agent 触发。
+
+期望行为：
+- `using-cpython-optimize` 明确说明 Agent 文档不是原生 Skill 自动触发单元，主 Agent 必须按 `agents/<agent>.md` 显式读取
+- `validation-skill-router` 的 additionalContext / deny reason 不只写 skill，还要写建议分派的 Agent 和 `Agent docs`
+- pyperformance 正式运行提示 baseline/candidate runner；pyperformance worker 提示 `cinderx-environment-verifier` 和 `cinderx-jit-analyst`；结果比较提示 `pyperformance-benchmark-analyst`；环境改写提示 `cinderx-environment-verifier`
+- Agent 未自动出现时，Agent 应按 hook 提供的 `agents/*.md` 路径读取角色文档，而不是假设系统会自动触发
+
+## 场景 46：运行 pyperformance 前必须触发 worker venv / pyvenv.cfg 检查
+
+用户话术示例：
+
+> Agent 上来直接跑 `python -m pyperformance run -b ...`，没有检查 worker venv 的 `pyvenv.cfg` 和 CinderX `.pth`。
+
+期望行为：
+- `validation-skill-router` 对 `python -m pyperformance run` 的 full/subset、pyperformance `run_benchmark.py --worker` 和 CinderX benchmark helper 先 deny，不让它们在缺证据时直接执行
+- deny reason 必须提醒读取 `pyperformance-env-contract.md`，并检查 worker venv、`pyvenv.cfg`、`include-system-site-packages`、CinderX `.pth`、`--inherit-environ`、worker 内 `cinderx.is_initialized()` / `cinderx.get_import_error()`
+- hook 输出必须建议 `cinderx-environment-verifier`，pyperformance worker/helper 还要建议 `cinderx-jit-analyst`
+- 完成前置证据后，用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 重试原命令
+- 只读查看 `pyvenv.cfg` 可以不阻断；写入、替换或打开写模式仍必须先走环境校验

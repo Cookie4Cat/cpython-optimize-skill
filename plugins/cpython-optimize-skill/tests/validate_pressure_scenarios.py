@@ -116,7 +116,7 @@ def main() -> int:
     baseline_source_contract = read(SKILLS / "using-cpython-optimize" / "references" / "baseline-source-contract.md")
     container_tooling_guidance = read(SKILLS / "using-cpython-optimize" / "references" / "container-tooling-guidance.md")
 
-    for number in range(1, 45):
+    for number in range(1, 47):
         require(scenarios, f"场景 {number}", "pressure scenarios")
 
     for name in PROFESSIONAL_SKILLS:
@@ -144,6 +144,8 @@ def main() -> int:
             "Workflow",
             "Agent",
             "Skill",
+            "Agent 文档不是原生 Skill 自动触发单元",
+            "agents/<agent>.md",
             "environment-verifier",
             "baseline-runner",
             "candidate-runner",
@@ -238,6 +240,19 @@ def main() -> int:
             "pyperformance-result-compare",
             "pip install",
             "patchlevel.h",
+            "pyvenv.cfg",
+            "is_pyvenv_cfg_mutation",
+            "pyperformance_env_contract_hint",
+            "pyperformance-env-contract.md",
+            "include-system-site-packages",
+            ".pth",
+            "--inherit-environ",
+            "cinderx.is_initialized()",
+            "agent_hint",
+            "Agent docs",
+            "agents/cinderx-environment-verifier.md",
+            "agents/pyperformance-baseline-runner.md",
+            "agents/cinderx-jit-analyst.md",
         ],
         "validation hook router",
     )
@@ -279,12 +294,12 @@ def main() -> int:
     )
     require_all(
         skill_texts["pyperformance-worker-run"],
-        ["run_benchmark.py", "--worker", "driver", "manager", "bench_command()", "sitecustomize", ".pth", "pyvenv.cfg", "LD_LIBRARY_PATH", "PYTHONPATH", "--inherit-environ", "include-system-site-packages", "系统 site-packages", "cinderx.is_initialized()", "bm/test-benchmark", "快速 L2", "非 debug"],
+        ["run_benchmark.py", "--worker", "driver", "manager", "bench_command()", "sitecustomize", ".pth", "pyvenv.cfg", "LD_LIBRARY_PATH", "PYTHONPATH", "--inherit-environ", "include-system-site-packages", "系统 site-packages", "cinderx.is_initialized()", "CPYTHON_OPTIMIZE_HOOK_ACK=1", "不能在未完成前置证据时提前加", "bm/test-benchmark", "快速 L2", "非 debug"],
         "pyperformance-worker-run",
     )
     require_all(
         skill_texts["pyperformance-suite-run"],
-        ["python -m pyperformance run", "--affinity", "pyperformance-affinity-guidance.md", "--inherit-environ", "-b <benchmark-selector>", "-o <result.json>", "warmup", "loops", "run.json", "subset", "full", "非 debug", "关闭 HIR/JIT dump", "--debug-single-value", "pyperf compare_to", "反问 Gate"],
+        ["python -m pyperformance run", "--affinity", "pyperformance-affinity-guidance.md", "--inherit-environ", "-b <benchmark-selector>", "-o <result.json>", "warmup", "loops", "run.json", "subset", "full", "CPYTHON_OPTIMIZE_HOOK_ACK=1", "不能在未完成前置证据时提前加", "非 debug", "关闭 HIR/JIT dump", "--debug-single-value", "pyperf compare_to", "反问 Gate"],
         "pyperformance-suite-run",
     )
     for name in [
@@ -567,6 +582,20 @@ def main() -> int:
             "分阶段平铺表",
             "函数形状表",
             "gate 策略",
+            "Agent docs",
+            "agents/<agent>.md",
+            "python -m pyperformance run -b",
+            "run_benchmark.py --worker",
+            "pyperformance-env-contract.md",
+            "pyvenv.cfg",
+            ".pth",
+            "--inherit-environ",
+            "cinderx.is_initialized()",
+            "cinderx.get_import_error()",
+            "cinderx-environment-verifier",
+            "cinderx-jit-analyst",
+            "include-system-site-packages",
+            "CPYTHON_OPTIMIZE_HOOK_ACK=1",
         ],
         "pressure scenarios",
     )

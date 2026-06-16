@@ -18,6 +18,8 @@ description: Use when 开始 CPython/CinderX 优化、环境审计、A/B 跑分�
 
 ## Agent 路由
 
+Agent 文档不是原生 Skill 自动触发单元。主 Agent 或 hook 一旦决定分派某个 Agent，必须按 `agents/<agent>.md` 路径显式读取对应角色文档，再执行其职责、反问 Gate 和输出要求。
+
 | Agent | 触发 |
 |-------|------|
 | `cinderx-orchestrator` | 任意入口和任务分发 |

@@ -24,6 +24,8 @@ description: Use when 需要运行单个 pyperformance benchmark 的 run_benchma
 - 判断 CinderX JIT 是否启用必须在 worker 内取证：`import cinderx`、`import _cinderx`、`cinderx.__file__`、`cinderx.get_import_error()`、`cinderx.is_initialized()`，并和 jit.log/HIR 中的目标 benchmark 本体对应。
 - Python baseline 不应误继承 CinderX 安装；如果故意比较 CinderX baseline，必须在口径里写清。
 - `--inherit-environ` 至少继承代理、`LD_LIBRARY_PATH`、`PYTHONPATH`、插件开关和 JIT 关键变量。
+- 若 `validation-skill-router` deny 了 worker/helper 命令，不要改用简化命令绕开；先补齐 `pyperformance-env-contract.md` 要求的 worker venv / `.pth` / `--inherit-environ` / JIT 初始化证据，再用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 前缀重试同一条真实 worker/helper 命令。
+- 不能在未完成前置证据时提前加 `CPYTHON_OPTIMIZE_HOOK_ACK=1`；ACK 只表示已经确认真实 worker 环境可用。
 - 分析阶段只增减 debug 变量，尽量保持同一真实 worker 命令。
 
 ## 快速 L2 命令形态

@@ -37,6 +37,12 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
+def require_all(text: str, needles: list[str], message: str) -> None:
+    missing = [needle for needle in needles if needle not in text]
+    if missing:
+        raise AssertionError(f"{message}; missing: {missing!r}")
+
+
 def make_cpython_repo(base: Path) -> Path:
     repo = base / "cpython"
     for rel in [
@@ -77,16 +83,46 @@ def main() -> int:
         )
 
         full_perf_block = run_router("python -m pyperformance run", repo)
-        require(
-            '"permissionDecision": "deny"' in full_perf_block
-            and "pyperformance" in full_perf_block
-            and "CPYTHON_OPTIMIZE_HOOK_ACK=1" in full_perf_block,
+        require_all(
+            full_perf_block,
+            [
+                '"permissionDecision": "deny"',
+                "pyperformance",
+                "pyperformance-env-contract.md",
+                "pyvenv.cfg",
+                "include-system-site-packages",
+                ".pth",
+                "--inherit-environ",
+                "cinderx.is_initialized()",
+                "cinderx-environment-verifier",
+                "pyperformance-baseline-runner",
+                "agents/pyperformance-baseline-runner.md",
+                "CPYTHON_OPTIMIZE_HOOK_ACK=1",
+            ],
             "full pyperformance runs should be blocked until validation planning is acknowledged",
+        )
+        targeted_perf_block = run_router("python -m pyperformance run -b example", repo)
+        require_all(
+            targeted_perf_block,
+            [
+                '"permissionDecision": "deny"',
+                "targeted pyperformance",
+                "pyperformance-env-contract.md",
+                "pyvenv.cfg",
+                "include-system-site-packages",
+                ".pth",
+                "--inherit-environ",
+                "cinderx.is_initialized()",
+                "cinderx-environment-verifier",
+                "agents/cinderx-environment-verifier.md",
+            ],
+            "targeted pyperformance runs must be blocked until worker venv evidence is checked",
         )
         pyperf_context = run_router("python -m pyperf compare_to baseline.json candidate.json", repo)
         require(
             "additionalContext" in pyperf_context
             and "pyperformance-result-compare" in pyperf_context
+            and "pyperformance-benchmark-analyst" in pyperf_context
             and "pyperf" in pyperf_context,
             "pyperf result commands should route to performance result guidance",
         )
@@ -107,21 +143,41 @@ def main() -> int:
             and "test_cinderx/lib test 集成测试" in integration_context,
             "CinderX integration gate should route to runtime test guidance",
         )
-        worker_context = run_router(
+        worker_block = run_router(
             "./python /tmp/pyperformance/data-files/benchmarks/bm_x/run_benchmark.py --worker",
             repo,
         )
-        require(
-            "additionalContext" in worker_context
-            and "pyperformance-worker-run" in worker_context,
-            "pyperformance worker commands should route to worker guidance",
+        require_all(
+            worker_block,
+            [
+                '"permissionDecision": "deny"',
+                "pyperformance worker",
+                "pyperformance-env-contract.md",
+                "pyvenv.cfg",
+                "include-system-site-packages",
+                ".pth",
+                "--inherit-environ",
+                "cinderx.is_initialized()",
+                "cinderx-environment-verifier",
+                "cinderx-jit-analyst",
+            ],
+            "pyperformance worker commands should stop until worker venv evidence is checked",
         )
-        cinderx_perf_context = run_router("BENCHMARK=example ./scripts/test-benchmark.sh", repo)
-        require(
-            "additionalContext" in cinderx_perf_context
-            and "pyperformance-worker-run" in cinderx_perf_context
-            and "pyperformance-suite-run" in cinderx_perf_context,
-            "CinderX benchmark helper scripts should route to pyperformance guidance",
+        cinderx_perf_block = run_router("BENCHMARK=example ./scripts/test-benchmark.sh", repo)
+        require_all(
+            cinderx_perf_block,
+            [
+                '"permissionDecision": "deny"',
+                "CinderX pyperformance helper",
+                "pyperformance-env-contract.md",
+                "pyperformance-worker-run",
+                "pyperformance-suite-run",
+                "pyvenv.cfg",
+                "--inherit-environ",
+                "cinderx.is_initialized()",
+                "cinderx-environment-verifier",
+            ],
+            "CinderX benchmark helper scripts should stop until pyperformance environment evidence is checked",
         )
 
         local_editable_install = run_router(
@@ -146,6 +202,24 @@ def main() -> int:
             '"permissionDecision": "deny"' in local_uv_install
             and "pip install" in local_uv_install,
             "uv pip install [options] . must be matched broadly",
+        )
+
+        pyvenv_cfg_edit = run_router(
+            "sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg",
+            repo,
+        )
+        require(
+            '"permissionDecision": "deny"' in pyvenv_cfg_edit
+            and "pyvenv.cfg" in pyvenv_cfg_edit
+            and "cinderx-env-validate" in pyvenv_cfg_edit
+            and "cinderx-environment-verifier" in pyvenv_cfg_edit,
+            "pyvenv.cfg mutations must route through environment validation and environment verifier",
+        )
+
+        pyvenv_cfg_read = run_router("cat .venv/pyvenv.cfg", repo)
+        require(
+            pyvenv_cfg_read == "",
+            "read-only pyvenv.cfg inspection must not trigger validation routing",
         )
 
         acknowledged = run_router(

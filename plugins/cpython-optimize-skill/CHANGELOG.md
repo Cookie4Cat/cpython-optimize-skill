@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-16
+
 ### Added
 
 - 新增 `cinderx-fast-validation` 技能，用 repo 外部 `ccache` compiler wrapper 加速 CinderX `setup_release`、release wheel 和 gate 重复验证，并提供可复用的 prelude 安装脚本。
@@ -14,6 +16,8 @@
 ### Changed
 
 - 细分单 benchmark 用例分析路径：进入 CinderX JIT 时继续使用 `cinderx-hir-lir-analyze` 分析 HIR、deopt、LIR 和平台差异；未进入 gate 时转入解释执行分析。
+- 强化 `validation-skill-router` 的运行时门禁：hook 输出会显式列出建议分派的 Agent 和 `agents/*.md` 路径；`pyperformance run`、worker 与 CinderX benchmark helper 在执行前必须先检查 `pyperformance-env-contract.md`、worker `pyvenv.cfg`、`include-system-site-packages`、CinderX `.pth`、`--inherit-environ` 和 worker 内 JIT 状态。
+- 明确 pyperformance 正确运行路径：完成前置环境契约证据后，用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 重试同一条正式 suite / worker / helper 命令；禁止在未完成证据时提前 ACK 绕过 hook。
 
 ## [0.8.9] - 2026-06-08
 

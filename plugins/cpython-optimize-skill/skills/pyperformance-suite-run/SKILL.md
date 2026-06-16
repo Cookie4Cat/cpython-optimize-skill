@@ -29,6 +29,8 @@ description: Use when 需要正式运行 python -m pyperformance run，生成 su
 - 正式非 debug 命令形态必须包含 `--affinity`、`--warmup`、`-b <benchmark-selector>`（subset 时）、`-o <result.json>` 和 `--inherit-environ`。
 - `--affinity` 必须落在当前 `nproc` / `lscpu` / `taskset -pc $$` / 容器 cpuset 显示的可用 CPU 内；高核号不可用时，重分配可用 CPU 并记录原始 affinity -> 实际 affinity。
 - `--inherit-environ` 至少覆盖代理、`LD_LIBRARY_PATH`、`PYTHONPATH`、插件开关和 JIT 关键变量。
+- 若 `validation-skill-router` deny 了 pyperformance 命令，不要把它当测试失败；先补齐 `pyperformance-env-contract.md` 要求的 worker venv / `.pth` / `--inherit-environ` / JIT 初始化证据，再用 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 前缀重试同一条正式命令。
+- 不能在未完成前置证据时提前加 `CPYTHON_OPTIMIZE_HOOK_ACK=1` 绕过 hook；ACK 只表示已经完成环境契约检查。
 - 记录 warmup、loops、CPU affinity、容器线、Python、CinderX commit。
 - 正式数据关闭 HIR/JIT dump、`--debug-single-value` 和临时诊断变量；这些只用于 L2 调试，不进入正式性能结论。
 - subset/full 选择必须来自 `validation-strategy` 的晋级理由。
